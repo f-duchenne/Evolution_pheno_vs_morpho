@@ -28,16 +28,16 @@ const df = DataFrame(CSV.File(join(["C:/Users/Duchenne/Documents/evolution_pheno
 include("C:/Users/Duchenne/Documents/evolution_pheno_morpho/scripts/derivatives_function_m_pheno_or_morpho.jl")
 
 dive=30
-alpha=1.0
-competition=1.0
+alpha=0.5
+competition=0.5
 nbsp_a=dive
 nbsp_p=dive
-Kp=100
+Kp=1
 r=df.rmax
 uinit=[ones(Float64,nbsp_a+nbsp_p);df.mu_phen[1:dive*2];df.sd_phen[1:dive*2];df.mu_morpho[1:dive*2];df.sd_morpho[1:dive*2];]
 trait="morpho"
 p=Kp,nbsp_a,nbsp_p,epsilon,seuil,θ,alpha,competition,morpho
-prob = ODEProblem(mDerivative,uinit,(0.0,10.0),p)
+prob = ODEProblem(mDerivative,uinit,(0.0,0.1),p)
 
 sol = @inbounds solve(prob, alg,saveat=1)
 plot(sol.t,transpose(sol[(1):(nbsp_a+nbsp_p),1:end]))

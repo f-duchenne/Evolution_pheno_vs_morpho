@@ -72,9 +72,9 @@
                 phen*similarity
             end
             comp_interactions = comp_inter_a.(1:nbsp_a)
-            comp_interactions[i,] = 1.0
+            comp_interactions[i,] = 0.0
             r=-0.6 #+(exp(-(abs(x-182)/180)^3)+exp(-(abs(w-182)/180)^3))/4
-            d_pop= r .+ alpha*sum(mut_interactions .* abund_flower) .- competition*sum(comp_interactions .* abund_poll)
+            d_pop= r - af./Kp .+ alpha*sum(mut_interactions .* abund_flower) .- competition*sum(comp_interactions .* abund_poll)
             return d_pop
         end
         ∂f_∂x_a(x, y) = @inbounds ForwardDiff.derivative(x -> pop_derivative_a(x,y),x)
@@ -104,14 +104,13 @@
                 phen.*similarity
             end
             comp_interactions = comp_inter_p.(1:nbsp_p)
-            comp_interactions[(i-nbsp_a),] = 1.0
+            comp_interactions[(i-nbsp_a),] = 0.0
             r=-0.6 #+(exp(-(abs(x-182)/180)^3)+exp(-(abs(w-182)/180)^3))/4
-            d_pop= r .+ alpha*sum(mut_interactions .* abund_poll) .- competition*sum(comp_interactions .* abund_flower)
+            d_pop= r - af./Kp .+ alpha*sum(mut_interactions .* abund_poll) .- competition*sum(comp_interactions .* abund_flower)
             return d_pop
         end
         ∂f_∂x_p(x, y) = @inbounds ForwardDiff.derivative(x -> pop_derivative_p(x,y),x)
         ∂f_∂y_p(x, y) = @inbounds ForwardDiff.derivative(y -> pop_derivative_p(x,y),y)
-
 
         if u[i] > seuil
             if i< nbsp_a+1 #if pollinator
@@ -130,9 +129,10 @@
                     phen.*similarity
                 end
                 comp_interactions= comp_inter_a.(1:nbsp_a)
+                comp_interactions[i,] = 0.0
                 r=-0.6 #+(exp(-(abs(mu_phenf.-182)/180)^3)+exp(-(abs(mu_morphof.-182)/180)^3))/4
                 ### DERIVATIVES FOR ABUNDANCE
-                du[i]= af .* (r .+ alpha*sum(mut_interactions .* abund_flower) .- competition*sum(comp_interactions .* abund_poll))
+                du[i]= af .* (r - af./Kp .+ alpha*sum(mut_interactions .* abund_flower) .- competition*sum(comp_interactions .* abund_poll))
 
                 ### PARTIAL DERIVATIVES FOR EVOLUTION
                 partial_dev_mu_phen = @inbounds ∂f_∂x_a.(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)])
@@ -160,9 +160,10 @@
                     phen.*similarity
                 end
                 comp_interactions= comp_inter_p.(1:nbsp_a)
+                comp_interactions[i-nbsp_a,] = 0.0
                 r=-0.6 #+(exp(-(abs(mu_phenf.-182)/180)^3)+exp(-(abs(mu_morphof.-182)/180)^3))/4
                 ### DERIVATIVES FOR ABUNDANCE
-                du[i]= af .* (r .+ alpha*sum(mut_interactions .* abund_poll) .- competition*sum(comp_interactions .* abund_flower))
+                du[i]= af .* (r - af./Kp .+ alpha*sum(mut_interactions .* abund_poll) .- competition*sum(comp_interactions .* abund_flower))
                 
                 ### PARTIAL DERIVATIVES FOR EVOLUTION
 
@@ -173,14 +174,11 @@
                 du[(nbsp_a+nbsp_p+i)]= (sqrt(af .+ 1) .* epsilon .* partial_dev_mu_phen)
                 du[(nbsp_a*2+nbsp_p*2+i)]=(sqrt(af .+ 1) .* epsilon .* partial_dev_sd_phen)
 
-
             end
         else
             du[i] = 0
             du[(nbsp_a+nbsp_p+i)] = 0
             du[(nbsp_a*2+nbsp_p*2+i)] = 0
-            du[(nbsp_a*3+nbsp_p*3+i)] = 0
-            du[(nbsp_a*4+nbsp_p*4+i)] = 0
         end
 
     end
