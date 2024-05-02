@@ -15,7 +15,7 @@ const θ = range(0.0, 365.0, length=180)
 const conv=1e-10
 const seuil=1e-5
 const maxiter=30000
-const alg = AutoTsit5(Rosenbrock23())
+const alg = AutoVern7(Rodas4())
 const tspan=(0.0,0.1)
 const maxdiv=30
 const threat=0
@@ -25,24 +25,42 @@ println("essai",jj)
 
 const df = DataFrame(CSV.File(join(["C:/Users/Duchenne/Documents/evolution_pheno_morpho/initial/pops_ini_",jj,".csv"])))
 
-include("C:/Users/Duchenne/Documents/evolution_pheno_morpho/scripts/derivatives_function_m_pheno_or_morpho.jl")
+include("C:/Users/Duchenne/Documents/evolution_pheno_morpho/scripts/derivatives_function_m_pheno_or_morpho_bar.jl")
 
 dive=30
-alpha=0.5
-competition=0.5
+alpha=1.0
+competition=1.0
 nbsp_a=dive
 nbsp_p=dive
-Kp=1
-r=df.rmax
-uinit=[ones(Float64,nbsp_a+nbsp_p);df.mu_phen[1:dive*2];df.sd_phen[1:dive*2];df.mu_morpho[1:dive*2];df.sd_morpho[1:dive*2];]
+Kp = 10.0
+r=-0.5
+uinit=[ones(Float64,nbsp_a+nbsp_p);df.mu_phen[1:dive*2];df.sd_phen[1:dive*2];]
 trait="morpho"
-p=Kp,nbsp_a,nbsp_p,epsilon,seuil,θ,alpha,competition,morpho
-prob = ODEProblem(mDerivative,uinit,(0.0,0.1),p)
+h=0.0
+eco = 0.0
+p=Kp,nbsp_a,nbsp_p,epsilon,seuil,θ,alpha,competition,morpho,r,h,eco
+prob = ODEProblem(mDerivative2,uinit,(0.0,100.0),p)
 
 sol = @inbounds solve(prob, alg,saveat=1)
 plot(sol.t,transpose(sol[(1):(nbsp_a+nbsp_p),1:end]))
+plot(sol.t,transpose(sol[(nbsp_a*1+nbsp_p*1+1):(nbsp_a*2+nbsp_p*2),1:end]))
 plot(sol.t,transpose(sol[(nbsp_a*2+nbsp_p*2+1):(nbsp_a*3+nbsp_p*3),1:end]))
 plot(sol.t,sol[(nbsp_a+nbsp_p+1),1:end])
+
+
+
+mu_phen_a=df.mu_phen[1:dive]
+sd_phen_a=df.sd_phen[1:dive]
+mu_phen_p=df.mu_phen[1+dive:dive*2]
+sd_phen_p=df.sd_phen[1+dive:dive*2]
+
+include("C:/Users/Duchenne/Documents/evolution_pheno_morpho/scripts/derivatives_function_m_pheno_or_morpho_bar.jl")
+include("C:/Users/Duchenne/Documents/evolution_pheno_morpho/scripts/derivatives_function_m_pheno_or_morpho.jl")
+prob = ODEProblem(mDerivative,uinit,(0.0,0.001),p)
+prob2 = ODEProblem(mDerivative2,uinit,(0.0,0.001),p)
+
+@benchmark @inbounds solve(prob, alg,saveat=1)
+@benchmark @inbounds solve(prob2, alg,saveat=1)
 
 function solve_model(problem,algo,tspan,p)
     ac=1
@@ -79,7 +97,7 @@ obj= @inbounds solve_model(prob,alg,tspan,p)
                 Kp=100
                 r=df.rmax
                 uinit=[ones(Float64,nbsp_a+nbsp_p)*10;df.mu_phen;df.sd_phen;df.mu_morpho;df.sd_morpho;]
-                p=Kp,nbsp_a,nbsp_p,epsilon,seuil,θ,alpha,competition
+                p=Kp,nbsp_a,nbsp_p,epsilon,seuil,θ,alpha,competition,r,h
                 prob = ODEProblem(mDerivative,uinit,tspan,p)
 
                 function solve_model(problem,algo,tspan,p)
