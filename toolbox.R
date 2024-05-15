@@ -25,7 +25,7 @@ Omega <- function(alpha) {
 #     return(omega(S, Sigma))
 #   }
 #   else {
-    f <- function(m) class(try(solve(t(m) %*% m), silent = T)) == "matrix"
+    f <- function(alpha) class(try(solve(t(alpha) %*% alpha), silent = T)) == "matrix"
     if (f(alpha) == FALSE) {
       return(0)
     }

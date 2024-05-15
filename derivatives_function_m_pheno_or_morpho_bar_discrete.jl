@@ -5,8 +5,7 @@
     u=copy(uinit)
     preci=0.000001
     max_gen_var=5
-    for ti in 1:970 
-        println(ti)
+    for ti in 1:t
         function invlogit(x)
             if x>=30.0
                 return(50.0)
@@ -231,5 +230,5 @@
         end
         result[(ti+1),:]=[u;ti;]
     end
-    return result[0:10:end,1:end]
+    return result[1:10:end,1:end]
 end

@@ -67,19 +67,47 @@ indf=rbind(indf,ind)
 
 
 #build competition matrix for plants:
-m = matrix(NA, dive/2, dive/2)
+comp_a = matrix(NA, dive/2, dive/2)
 for(i in 1:(dive/2)){
 	mu1=invlogit1(subset(bidon,type=="mu" & species==i)$value)
 	sd1=invlogit(subset(bidon,type=="sd" & species==i)$value)
 	for(j in 1:(dive/2)){
-		mu2=invlogit1(subset(bidon,type=="mu" & species==(j+dive/2))$value)
-		sd2=invlogit(subset(bidon,type=="sd" & species==(j+dive/2))$value)
-		f=function(x){pmin(dnorm(x,mu1,sd1),dnorm(x,mu2,sd2))}
-		m[j,i]=sum(f(seq(0,365,0.1)))*0.1
+		similarity=sum(m[,i] * m[,j]) / sum(m[,i])
+		if(tr=="phen"){
+			mu2=invlogit1(subset(bidon,type=="mu" & species==j)$value)
+			sd2=invlogit(subset(bidon,type=="sd" & species==j)$value)
+			f=function(x){pmin(dnorm(x,mu1,sd1),dnorm(x,mu2,sd2))}
+			phen=sum(f(seq(0,365,0.1)))*0.1
+		}else{
+			phen=1
+		}
+		comp_a[i,j]=phen*similarity	
 	}  
 }
+diag(comp_a)=1
 
-A=cbind(
+#build competition matrix for plants:
+comp_p = matrix(NA, dive/2, dive/2)
+for(i in 1:(dive/2)){
+	mu1=invlogit1(subset(bidon,type=="mu" & species==(i+dive/2))$value)
+	sd1=invlogit(subset(bidon,type=="sd" & species==(i+dive/2))$value)
+	for(j in 1:(dive/2)){
+		similarity=sum(t(m)[,i] * t(m)[,j]) / sum(t(m)[,i])
+		if(tr=="phen"){
+			mu2=invlogit1(subset(bidon,type=="mu" & species==(j+dive/2))$value)
+			sd2=invlogit(subset(bidon,type=="sd" & species==(j+dive/2))$value)
+			f=function(x){pmin(dnorm(x,mu1,sd1),dnorm(x,mu2,sd2))}
+			phen=sum(f(seq(0,365,0.1)))*0.1
+		}else{
+			phen=1
+		}
+		comp_p[i,j]=phen*similarity	
+	}  
+}
+diag(comp_p)=1
+
+A=rbind(cbind(comp_p,-1*m),cbind(-1*m,comp_a))
+Omega(A)
 
 }
 }
