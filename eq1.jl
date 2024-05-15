@@ -27,6 +27,7 @@ function simue(pini)
     nbsp_p=dive
     traits=["morpho";"pheno";]
     uinit=[ones(Float64,nbsp_a+nbsp_p);df.mu_phen[1:dive*2];df.sd_phen[1:dive*2];]
+    final=missing
     for trait in traits
         p=nbsp_a,nbsp_p,epsilon,alpha,competition,trait,r
         sol = @inbounds mDerivative2(uinit,p,1500)
@@ -47,9 +48,25 @@ for jj in 1:10
     println("essai",jj)
     df = DataFrame(CSV.File(join(["C:/Users/Duchenne/Documents/evolution_pheno_morpho/initial/pops_ini_",jj,".csv"])))
     pini= alpha,r,epsilon,df
-    final=simue(pini)
-    CSV.write(join(["C:/Users/Duchenne/Documents/evolution_pheno_morpho/ueq_",jj,".csv"]),final)
+    finalf=simue(pini)
+    CSV.write(join(["C:/Users/Duchenne/Documents/evolution_pheno_morpho/ueq_",jj,".csv"]),finalf)
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

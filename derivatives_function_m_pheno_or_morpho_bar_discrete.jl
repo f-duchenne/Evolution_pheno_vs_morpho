@@ -1,6 +1,6 @@
 @inbounds function mDerivative2(uinit,p,t)
     nbsp_a,nbsp_p,epsilon,alpha,competition,trait,r = p
-    result = Array{Float64}(undef, t, length(uinit)+1)
+    result = Array{Float64}(undef, t+1, length(uinit)+1)
     result[1,:]=[uinit;0;]
     u=copy(uinit)
     preci=0.000001
