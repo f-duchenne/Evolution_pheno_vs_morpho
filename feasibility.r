@@ -37,7 +37,7 @@ datf=rbind(datf,dat2)
 
 
 indf=NULL
-for(ess in c(1:2)){
+for(ess in c(1:5)){
 for(tr in c("morpho","pheno")){
 for(ti in c(0,10,100,300,800,1500)){
 bidon=subset(datf,essai==ess & time==ti & trait==tr)
@@ -57,23 +57,41 @@ for(i in 1:(dive/2)){
    
 ind=networklevel(m,index=c("weighted connectance","weighted nestedness","interaction evenness","H2"))
 ind=as.data.frame(t(ind))
+ind$NODF=networklevel(round(m,digits=5),index=c("weighted NODF"))
 names(ind)=gsub("weighted ","",names(ind))
 ind$modularity=computeModules(m, method="Beckett")@"likelihood"
 ind$trait=tr
 ind$time=ti
 ind$essai=ess
 indf=rbind(indf,ind)
+
+
+#build competition matrix for plants:
+m = matrix(NA, dive/2, dive/2)
+for(i in 1:(dive/2)){
+	mu1=invlogit1(subset(bidon,type=="mu" & species==i)$value)
+	sd1=invlogit(subset(bidon,type=="sd" & species==i)$value)
+	for(j in 1:(dive/2)){
+		mu2=invlogit1(subset(bidon,type=="mu" & species==(j+dive/2))$value)
+		sd2=invlogit(subset(bidon,type=="sd" & species==(j+dive/2))$value)
+		f=function(x){pmin(dnorm(x,mu1,sd1),dnorm(x,mu2,sd2))}
+		m[j,i]=sum(f(seq(0,365,0.1)))*0.1
+	}  
+}
+
+A=cbind(
+
 }
 }
 }
 
 acp=PCA(indf[,1:6])
 
-indf=cbind(indf,acp$ind$coord)
+indf2=cbind(indf,acp$ind$coord)
 
 colo=c("dodgerblue3","chartreuse3")
 
-pl1=ggplot(data=indf,aes(x=Dim.1,y=Dim.2,alpha=time,color=trait,group=paste(essai,trait)))+
+pl1=ggplot(data=indf2,aes(x=Dim.1,y=Dim.2,alpha=time,color=trait,group=paste(essai,trait)))+
 geom_vline(xintercept=0,linetype="dashed")+
 geom_hline(yintercept=0,linetype="dashed")+
 geom_point()+
@@ -81,8 +99,20 @@ geom_line(show_guide =F)+theme_bw()+theme(axis.line = element_line(colour = "bla
 strip.background=element_rect(fill=NA,color=NA))+
 xlab(paste0("Dimension 1 (",round(acp$eig[1,2],digits=1)," %)"))+
 ylab(paste0("Dimension 2 (",round(acp$eig[2,2],digits=1)," %)"))+
-scale_color_manual(values=colo)
+scale_color_manual(values=colo)+ggtitle("a")
 
-pl2=fviz_pca_var(acp, col.var = "black", repel =TRUE)
+pl2=fviz_pca_var(acp, col.var = "black", repel =TRUE)+ggtitle("b")
 
-grid.arrange(pl1,pl2,ncol=2,widths=c(1.5,1))
+pl3=ggplot(data=subset(indf2,time==1500),aes(x=Dim.1,y=Dim.2,alpha=time,color=trait,group=paste(essai,trait)))+
+geom_vline(xintercept=0,linetype="dashed")+
+geom_hline(yintercept=0,linetype="dashed")+
+geom_point()+
+theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
+strip.background=element_rect(fill=NA,color=NA))+
+xlab(paste0("Dimension 1 (",round(acp$eig[1,2],digits=1)," %)"))+
+ylab(paste0("Dimension 2 (",round(acp$eig[2,2],digits=1)," %)"))+
+scale_color_manual(values=colo)+ggtitle("c")
+
+top=plot_grid(pl1,pl2,align="hv",ncol=2)
+
+grid.arrange(top,pl3,ncol=1)

@@ -44,7 +44,7 @@ function simue(pini)
 end
 
 
-for jj in 1:10
+for jj in 6:10
     println("essai",jj)
     df = DataFrame(CSV.File(join(["C:/Users/Duchenne/Documents/evolution_pheno_morpho/initial/pops_ini_",jj,".csv"])))
     pini= alpha,r,epsilon,df

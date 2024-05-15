@@ -5,29 +5,26 @@
     u=copy(uinit)
     preci=0.000001
     max_gen_var=5
-    for ti in 1:t  
+    for ti in 1:970 
+        println(ti)
         function invlogit(x)
-            # if x>=30
-            #     return(50)
-            # end
+            if x>=30.0
+                return(50.0)
+            end
 
-            # if x<=(-30)
-            #     return(1)
-            # end
+            if x<=(-30.0)
+                return(1.0)
+            end
 
-            # if abs(x)<30
-            #     return(1+50*exp(x)/(1+exp(x)))
-            # end
-
-            return(1+50*exp(x)/(1+exp(x)))
-
+            if abs(x)<30.0
+                return(1.0+49.0*exp(x)/(1.0+exp(x)))
+            end
         end
 
         function invlogit1(x)
-            return(80+285*exp(x)/(1+exp(x)))
+            return(80.0+205.0*exp(x)/(1.0+exp(x)))
 
         end
-        
         
         #Defining some shorcuts
         #pheno
@@ -81,7 +78,7 @@
                             phen2= pdf.(Normal.(mu1,sd1),theta)
                             return(min.(phen1,phen2))
                         end
-                        phen=quadgk(inte, -365, 365+365, rtol=1e-6)[1]
+                        phen=quadgk(inte, 0, 365, rtol=1e-6)[1]
                         mut_interactions[v] = phen
                     end
                     return(mut_interactions)
@@ -101,7 +98,7 @@
                                 phen2= pdf.(Normal.(mu1,sd1),theta)
                                 return(min.(phen1,phen2))
                             end
-                            phen=quadgk(inte, -365, 365+365, rtol=1e-6)[1]
+                            phen=quadgk(inte, 0, 365, rtol=1e-6)[1]
                         else
                             phen=1.0
                         end
@@ -119,7 +116,6 @@
             ∂f_∂x_a(x, y) = @inbounds ForwardDiff.derivative(x -> pop_derivative_a(x,y),x)
             ∂f_∂y_a(x, y) = @inbounds ForwardDiff.derivative(y -> pop_derivative_a(x,y),y)
 
-        
             @inbounds function pop_derivative_p(x,y)
                 #functions for derivation
                 p2 = mu_phen_a,sd_phen_a,mu_phen_p,sd_phen_p,nbsp_p,nbsp_a,m
@@ -134,7 +130,7 @@
                             phen2= pdf.(Normal.(mu1,sd1),theta)
                             return(min.(phen1,phen2))
                         end
-                        phen=quadgk(inte, -365, 365+365, rtol=1e-6)[1]
+                        phen=quadgk(inte, 0, 365, rtol=1e-6)[1]
                         mut_interactions[v] = phen
                     end
                     return(mut_interactions)
@@ -154,7 +150,7 @@
                                 phen2= pdf.(Normal.(mu1,sd1),theta)
                                 return(min.(phen1,phen2))
                             end
-                            phen=quadgk(inte, -365, 365+365, rtol=1e-6)[1]
+                            phen=quadgk(inte, 0, 365, rtol=1e-6)[1]
                         else
                             phen=1.0
                         end
@@ -203,7 +199,6 @@
                 end
                 u[(nbsp_a*2+nbsp_p*2+i)]=u[(nbsp_a*2+nbsp_p*2+i)]+(sqrt(af .+ 1) .* epsilon .* partial_dev_sd_phen)
 
-
             else#if plant
                 #### EVOLUTION                
                 ### PARTIAL DERIVATIVES FOR EVOLUTION
@@ -232,11 +227,9 @@
                     end
                 end
                 u[(nbsp_a*2+nbsp_p*2+i)]=u[(nbsp_a*2+nbsp_p*2+i)]+(sqrt(af .+ 1) .* epsilon .* partial_dev_sd_phen)
-
             end
-
         end
         result[(ti+1),:]=[u;ti;]
     end
-    return result
+    return result[0:10:end,1:end]
 end
