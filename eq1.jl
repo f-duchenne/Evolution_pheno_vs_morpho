@@ -10,36 +10,57 @@ using LinearAlgebra
 using Statistics 
 using ForwardDiff
 using Distributions
+using Intervals
+using QuadGK
 
-const θ = range(0.0, 365.0, length=180)
-const conv=1e-10
-const seuil=1e-5
-const maxiter=30000
-const alg = AutoVern7(Rodas4())
-const tspan=(0.0,0.1)
-const maxdiv=30
-const threat=0
+include("C:/Users/Duchenne/Documents/evolution_pheno_morpho/scripts/derivatives_function_m_pheno_or_morpho_bar_discrete.jl")
+const alpha=0.75
+const r=-0.5
+const epsilon=0.001
 
-const jj=1 #ARGS[1]
-println("essai",jj)
 
-const df = DataFrame(CSV.File(join(["C:/Users/Duchenne/Documents/evolution_pheno_morpho/initial/pops_ini_",jj,".csv"])))
+function simue(pini)
+    alpha,r,epsilon,df = pini
+    competition=10.0
+    dive=10
+    nbsp_a=dive
+    nbsp_p=dive
+    traits=["morpho";"pheno";]
+    uinit=[ones(Float64,nbsp_a+nbsp_p);df.mu_phen[1:dive*2];df.sd_phen[1:dive*2];]
+    for trait in traits
+        p=nbsp_a,nbsp_p,epsilon,alpha,competition,trait,r
+        sol = @inbounds mDerivative2(uinit,p,1500)
+        if trait=="morpho"
+            final=DataFrame(sol[:,(dive*2+1):end],:auto)
+            final.trait.=trait
+        else
+            bidon=DataFrame(sol[:,(dive*2+1):end],:auto)
+            bidon.trait.=trait
+            final=vcat(final,bidon)
+        end
+    end
+    return(final)
+end
 
-include("C:/Users/Duchenne/Documents/evolution_pheno_morpho/scripts/derivatives_function_m_pheno_or_morpho_bar.jl")
 
-dive=30
-alpha=1.0
-competition=1.0
-nbsp_a=dive
-nbsp_p=dive
-Kp = 10.0
-r=-0.5
-uinit=[ones(Float64,nbsp_a+nbsp_p);df.mu_phen[1:dive*2];df.sd_phen[1:dive*2];]
-trait="morpho"
-h=0.0
-eco = 0.0
-p=Kp,nbsp_a,nbsp_p,epsilon,seuil,θ,alpha,competition,morpho,r,h,eco
-prob = ODEProblem(mDerivative2,uinit,(0.0,100.0),p)
+for jj in 1:10
+    println("essai",jj)
+    df = DataFrame(CSV.File(join(["C:/Users/Duchenne/Documents/evolution_pheno_morpho/initial/pops_ini_",jj,".csv"])))
+    pini= alpha,r,epsilon,df
+    final=simue(pini)
+    CSV.write(join(["C:/Users/Duchenne/Documents/evolution_pheno_morpho/ueq_",jj,".csv"]),final)
+end
+
+
+
+
+
+plot(sol[:,end],sol[:,(nbsp_a*1+nbsp_p*1+1):(nbsp_a*2+nbsp_p*2)], legend = false)
+plot(sol[:,end],sol[:,(nbsp_a*2+nbsp_p*2+1):(nbsp_a*3+nbsp_p*3)])
+
+
+
+prob = ODEProblem(mDerivative2,uinit,(0.0,1.0),p)
 
 sol = @inbounds solve(prob, alg,saveat=1)
 plot(sol.t,transpose(sol[(1):(nbsp_a+nbsp_p),1:end]))
@@ -48,6 +69,7 @@ plot(sol.t,transpose(sol[(nbsp_a*2+nbsp_p*2+1):(nbsp_a*3+nbsp_p*3),1:end]))
 plot(sol.t,sol[(nbsp_a+nbsp_p+1),1:end])
 
 
+uinit=sol[end,1:30]
 
 mu_phen_a=df.mu_phen[1:dive]
 sd_phen_a=df.sd_phen[1:dive]
@@ -79,6 +101,13 @@ end
 
 obj= @inbounds solve_model(prob,alg,tspan,p)
 
+function inte(x)
+phen1= pdf.(Normal.(180,20),x)
+phen2= pdf.(Normal.(180.0001,19),x)
+return(min.(phen1,phen2))
+end
+quadgk(inte, 0, 365, rtol=1e-6)
+sum(inte.(θ))*step(θ)
 
 @inbounds function simulations(jj) 
     GC.gc()
