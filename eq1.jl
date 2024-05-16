@@ -20,9 +20,8 @@ const epsilon=0.001
 
 
 function simue(pini)
-    alpha,r,epsilon,df = pini
+    alpha,r,epsilon,df,dive = pini
     competition=10.0
-    dive=10
     nbsp_a=dive
     nbsp_p=dive
     traits=["morpho";"pheno";]
@@ -45,12 +44,13 @@ end
 
 
 for jj in 1:50
+    dive=20
     println("essai",jj)
     df = DataFrame(CSV.File(join(["C:/Users/Duchenne/Documents/evolution_pheno_morpho/initial/pops_ini_",jj,".csv"])))
-    pini= alpha,r,epsilon,df
+    pini= alpha,r,epsilon,df,dive
     finalf=simue(pini)
     GC.gc()
-    CSV.write(join(["C:/Users/Duchenne/Documents/evolution_pheno_morpho/ueq_",jj,".csv"]),finalf)
+    CSV.write(join(["C:/Users/Duchenne/Documents/evolution_pheno_morpho/ueq_",jj,"_",dive,".csv"]),finalf)
 end
 
 
