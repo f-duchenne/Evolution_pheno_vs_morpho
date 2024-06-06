@@ -189,27 +189,6 @@ plot_grid(pl6,pl6b,ncol=1,align="hv")
 dev.off();
 
 ############################# FIGURE 5
-indf4=subset(indf,competition==5)
-
-pl6=ggplot(data=subset(indf4,rho==0.05),aes(x=as.factor(time),y=feas,color=trait))+geom_violin(position=position_dodge(width=0.5),width=1,scale="width",show.legend=FALSE)+
-geom_boxplot(width=0.1,position=position_dodge(width=0.5))+
-theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.background = element_blank(),
-strip.background=element_rect(fill=NA,color=NA))+
-scale_color_manual(values=colo)+scale_fill_manual(values=colo)+
-labs(linetype=expression(paste(n[sp]," / guild")))+ylab("Size of the feasibility domain")+xlab("Time")+facet_grid(cols=vars(rich), labeller = label_bquote(cols=n[sp] == .(rich)))+scale_x_discrete(breaks=c(0,2000))+ggtitle("a",subtitle="low interspecific competition")
-
-pl6b=ggplot(data=subset(indf4,rho==0.4),aes(x=as.factor(time),y=feas,color=trait))+geom_violin(position=position_dodge(width=0.5),width=1,scale="width",show.legend=FALSE)+
-geom_boxplot(width=0.1,position=position_dodge(width=0.5))+
-theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
-strip.background=element_rect(fill=NA,color=NA),panel.border=element_blank())+
-scale_color_manual(values=colo)+scale_fill_manual(values=colo)+
-labs(linetype=expression(paste(n[sp]," / guild")))+ylab("Size of the feasibility domain")+xlab("Time")+facet_grid(cols=vars(rich), labeller = label_bquote(cols=n[sp] == .(rich)))+scale_x_discrete(breaks=c(0,2000))+ggtitle("b",subtitle="high interspecific competition")
-
-plot_grid(pl6,pl6b,ncol=1,align="hv")
-
-
-
-
 indf5=subset(indf4,time %in% c(0,2000))
 
 pl7=ggplot(data=subset(indf5,time==0),aes(x=rich,y=feas,color=as.factor(rho)))+
@@ -220,10 +199,9 @@ strip.background=element_rect(fill=NA,color=NA),panel.border=element_blank())+
 labs(linetype=expression(paste(n[sp]," / guild")))+ylab("Size of the feasibility domain")+xlab("Number of species per guild")+facet_wrap(~trait)+scale_colour_viridis(option="D",discrete=TRUE)+
 labs(colour=expression(rho))+ggtitle("a",subtitle="Initial networks")
 
-pl8=ggplot(data=subset(indf5,time==2000),aes(x=as.factor(rich),y=feas,color=as.factor(rho)))+geom_violin(position=position_dodge(width=0.5),width=1,scale="width",show.legend=FALSE)+
-geom_boxplot(width=0.1,position=position_dodge(width=0.5))+
-stat_summary(data=subset(indf5,time==2000),
-aes(x=as.numeric(as.factor(rich)),y=feas,color=as.factor(rho)),fun.y=mean, geom="line", size = 0.5,position=position_dodge(width=0.5))+
+pl8=ggplot(data=subset(indf5,time==2000),aes(x=rich,y=feas,color=as.factor(rho)))+
+stat_summary(fun.y = mean, fun.ymin = function(x) mean(x) - sd(x), fun.ymax = function(x) mean(x) + sd(x), geom = "pointrange")+
+stat_summary(fun.y=mean, geom="line", size = 0.5,position=position_dodge(width=0.5))+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
 strip.background=element_rect(fill=NA,color=NA),panel.border=element_blank())+
 labs(linetype=expression(paste(n[sp]," / guild")))+ylab("Size of the feasibility domain")+xlab("Number of species per guild")+facet_wrap(~trait)+scale_colour_viridis(option="D",discrete=TRUE)+
