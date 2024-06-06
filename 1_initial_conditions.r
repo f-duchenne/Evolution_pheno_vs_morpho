@@ -19,20 +19,11 @@ nbsp_p=30
 
 duree=70
 #pheno
-mu_phen=rnorm(nbsp_a+nbsp_p,190,duree)
-while(length(mu_phen[mu_phen>365 | mu_phen<0])>0){
-mu_phen[mu_phen>365]=mu_phen[mu_phen>365]-365
-mu_phen[mu_phen<0]=365+mu_phen[mu_phen<0]
-}
 mu_phen=runif(nbsp_a+nbsp_p,-2.5,2.5)
 sd_phen=runif(nbsp_a+nbsp_p,-2.5,2.5)
 
 #morpho
-mu_morpho=rnorm(nbsp_a+nbsp_p,190,duree)
-while(length(mu_morpho[mu_morpho>365 | mu_morpho<0])>0){
-mu_morpho[mu_morpho>365]=mu_morpho[mu_morpho>365]-365
-mu_morpho[mu_morpho<0]=365+mu_morpho[mu_morpho<0]
-}
+mu_morpho=runif(nbsp_a+nbsp_p,-2.5,2.5)
 sd_morpho=runif(nbsp_a+nbsp_p,-2.5,2.5)
 
 

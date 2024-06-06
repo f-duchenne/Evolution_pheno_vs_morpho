@@ -23,13 +23,11 @@ Omega <- function(alpha) {
   if (length(which(diag(alpha) == 0)) == 0) {
     Sigma <- chol2inv(alpha, size = NCOL(alpha))
     return(omega(S, Sigma))
-  }
-  else {
+  }else {
     f <- function(m) class(try(solve(t(m) %*% m), silent = T)) == "matrix"
     if (f(alpha)[1] == FALSE) {
       return(0)
-    }
-    else {
+    }else {
       Sigma <- solve(t(alpha) %*% alpha)
       return(omega(S, Sigma))
     }

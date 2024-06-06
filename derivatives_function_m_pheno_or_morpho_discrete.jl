@@ -108,8 +108,8 @@
                     return(comp_interactions)
                 end
                 comp_interactions = comp_inter_a(p3)
-                comp_interactions[i,] = 0.0
-                d_pop= r .- af .+ alpha*sum(mut_interactions .* abund_flower) .- competition*sum(comp_interactions .* abund_poll)
+                comp_interactions[i,] = 1.0
+                d_pop= r .+ alpha*sum(mut_interactions .* abund_flower) .- competition*sum(comp_interactions .* abund_poll)
                 return d_pop
             end
             ∂f_∂x_a(x, y) = @inbounds ForwardDiff.derivative(x -> pop_derivative_a(x,y),x)
@@ -160,8 +160,8 @@
                     return(comp_interactions)
                 end
                 comp_interactions= comp_inter_p(p2)
-                comp_interactions[(i-nbsp_a),] = 0.0
-                d_pop= r .- af .+ alpha*sum(mut_interactions .* abund_poll) .- competition*sum(comp_interactions .* abund_flower)
+                comp_interactions[(i-nbsp_a),] = 1.0
+                d_pop= r .+ alpha*sum(mut_interactions .* abund_poll) .- competition*sum(comp_interactions .* abund_flower)
                 return d_pop
             end
             ∂f_∂x_p(x, y) = @inbounds ForwardDiff.derivative(x -> pop_derivative_p(x,y),x)

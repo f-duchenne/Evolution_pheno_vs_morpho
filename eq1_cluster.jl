@@ -5,23 +5,24 @@ using CSV
 using DelimitedFiles
 using DataFrames
 using Infinity
-using OrdinaryDiffEq
 using LinearAlgebra
 using Statistics 
 using ForwardDiff
 using Distributions
-using Intervals
 using QuadGK
 
-include("C:/Users/Duchenne/Documents/evolution_pheno_morpho/scripts/derivatives_function_m_pheno_or_morpho_discrete.jl")
-const alpha=0.75
+
+const jj=ARGS[1]
+println("essai",jj)
+
+include("C:/Users/Duchenne/Documents/evolution_pheno_morpho/scripts/derivatives_function_m_pheno_or_morpho_bar_discrete.jl")
+const alpha=1.0
 const r=-0.5
 const epsilon=0.001
 
 
 function simue(pini)
-    alpha,r,epsilon,df,dive = pini
-    competition=10.0
+    alpha,r,epsilon,df,dive,competition,tf = pini
     nbsp_a=dive
     nbsp_p=dive
     traits=["morpho";"pheno";]
@@ -29,32 +30,35 @@ function simue(pini)
     final=missing
     for trait in traits
         p=nbsp_a,nbsp_p,epsilon,alpha,competition,trait,r
-        sol = @inbounds mDerivative2(uinit,p,1500)
+        sol = @inbounds mDerivative2(uinit,p,tf)
         if trait=="morpho"
             final=DataFrame(sol[:,(dive*2+1):end],:auto)
-            final.trait.=trait
+            final[!,"trait"] .=trait
         else
             bidon=DataFrame(sol[:,(dive*2+1):end],:auto)
-            bidon.trait.=trait
+            bidon[!,"trait"] .=trait
             final=vcat(final,bidon)
         end
     end
     return(final)
 end
 
-
-for jj in 1:50
-    dive=10
+for competition in [2;4;]
+for dive in [10;20;30;]
     println("essai",jj)
+    competition=2.0
+    tf=2000
     df = DataFrame(CSV.File(join(["C:/Users/Duchenne/Documents/evolution_pheno_morpho/initial/pops_ini_",jj,".csv"])))
-    pini= alpha,r,epsilon,df,dive
+    pini= alpha,r,epsilon,df,dive,competition,tf
     finalf=simue(pini)
     GC.gc()
-    CSV.write(join(["C:/Users/Duchenne/Documents/evolution_pheno_morpho/ueq_",jj,"_",dive,".csv"]),finalf)
+    CSV.write(join(["/home/duchenne/pheno/results/ueq_",jj,"_",dive,"_",competition,".csv"]),finalf)
 end
 
 
-
+@df finalf plot(cols(1:dive))
+sol=Matrix(finalf)
+plot(sol[:,end],sol[:,(nbsp_a*1+nbsp_p*1+1):(nbsp_a*2+nbsp_p*2)], legend = false)
 
 
 
