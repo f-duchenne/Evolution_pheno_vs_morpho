@@ -75,7 +75,7 @@ nrandom=20
 for(competition in c(5,10)){
 for (rich in c(10,20,30)){
 for(tr in c("morpho","pheno")){
-for(ti in c(0,100,250,500,750,1000,1500,2000)){
+for(ti in seq(sqrt(0),sqrt(2000),length.out=9)^2){
 bidon=subset(datf,essai==ess & time==ti & trait==tr & rich==rich & comp==competition)
 
 #build interaction matrix:

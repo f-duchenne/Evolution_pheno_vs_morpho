@@ -25,7 +25,7 @@ pl1=ggplot()+
 geom_polygon(alpha=0.4,data=dat,aes(x=x,y=abund,color=species,fill=species))+
 geom_polygon(data=overlaps,aes(x=x,y=mut1),color="#E69F00",fill="#E69F00")+
 geom_polygon(data=overlaps,aes(x=x,y=mut2),color="#56B4E9",fill="#56B4E9")+
-geom_polygon(data=overlaps,aes(x=x,y=comp),color="#009E73",fill="#009E73")+
+geom_polygon(data=overlaps,aes(x=x,y=comp),color="#E83F3FFF",fill="#E83F3FFF")+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.ticks=element_blank(),axis.text=element_blank(),
 panel.border=element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
 strip.background=element_rect(fill=NA,color=NA),legend.position="none")+
@@ -48,7 +48,7 @@ pl2=ggplot()+
 geom_polygon(alpha=0.4,data=dat,aes(x=x,y=abund,color=species,fill=species))+
 geom_polygon(data=overlaps,aes(x=x,y=mut1),color="#E69F00",fill="#E69F00")+
 geom_polygon(data=overlaps,aes(x=x,y=mut2),color="#56B4E9",fill="#56B4E9")+
-geom_polygon(data=overlaps,aes(x=x,y=comp),color="#009E73",fill="#009E73")+
+geom_polygon(data=overlaps,aes(x=x,y=comp),color="#E83F3FFF",fill="#E83F3FFF")+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.ticks=element_blank(),axis.text=element_blank(),
 panel.border=element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
 strip.background=element_rect(fill=NA,color=NA),legend.position="none")+

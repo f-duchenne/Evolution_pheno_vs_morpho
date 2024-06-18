@@ -366,8 +366,12 @@ comp_phen_a=comp_a*phen_a
 diag(comp_phen_a)=1
 comp_phen_p=comp_p*phen_p
 diag(comp_phen_p)=1
-
+if(tr=="morpho"){
 A=rbind(cbind(competition*comp_p,-1*m),cbind(-1*t(m),competition*comp_a))
+}else{
+A=rbind(cbind(competition*comp_phen_p,-1*m),cbind(-1*t(m),competition*comp_phen_a))
+}
+
 ind$feas=Omega(A)
 ind$competition=competition
 ind$rho=rho

@@ -3,7 +3,7 @@
 #' Check for packages and if necessary install into library 
 #+ message = FALSE
 rm(list=ls())
-pkgs <- c("data.table", "dplyr","R2jags","ggplot2","bipartite","FactoMineR","factoextra","gridExtra","cowplot","ggpubr","scales","viridis") 
+pkgs <- c("data.table", "dplyr","R2jags","ggplot2","bipartite","FactoMineR","factoextra","gridExtra","cowplot","ggpubr","scales","viridis","glmmTMB","lm4") 
 
 inst <- pkgs %in% installed.packages()
 if (any(inst)) install.packages(pkgs[!inst])
@@ -13,14 +13,24 @@ setwd(dir="C:/Users/Duchenne/Documents/evolution_pheno_morpho/")
 empf=fread("empirical_networks.csv")
 names(empf)=gsub("weighted ","",names(empf))
 names(empf)[3]="inter. evenness"
+names(empf)[5]="wNODF"
 fwrite(unique(empf[,c("site","na","np","nround","nyear")]),"table1.csv")
 empf2=subset(empf,competition==5 & rho==0.05)
 colo=c("dodgerblue4","chartreuse3")
+
+empf$dive=empf$na+empf$np 
+empf$prop_motif=(empf$motifn/empf$motifntot)
+model=lmer(feas_with_pheno~rho*(prop_motif+dive)+(1|site),data=subset(empf,competition==5 & rho %in% c(0.01,0.05,0.2)))
 
 setwd(dir="C:/Users/Duchenne/Documents/evolution_pheno_morpho")
 indf=fread("C:/Users/Duchenne/Documents/evolution_pheno_morpho/networks_info_empir.csv")
 names(indf)=gsub("weighted ","",names(indf))
 names(indf)[3]="inter. evenness"
+names(indf)[5]="wNODF"
+
+indf$dive=indf$nbsp_a+indf$nbsp_p 
+indf$prop_motif=(indf$motifn/indf$motifntot)
+model=glmmTMB(feas~(prop_motif+dive)*trait+(1|site),family=beta_family(link="logit"),data=subset(indf,competition==10 & rho==0.05 & time==2000))
 
 indf2=subset(indf,rho==0.01)
 acp=PCA(indf2[,1:6],graph=FALSE)
@@ -42,7 +52,7 @@ scale_color_manual(values=colo)+ggtitle("a")+geom_point(data=empf,aes(x=Dim.1,y=
 pl2=fviz_pca_var(acp, col.var = "black", repel =TRUE)+ggtitle("b")+
 theme(plot.title=element_text(size=14,face="bold",hjust = 0))
 
-png("Fig.S5.png",width=1200,height=800,res=160)
+png("Fig.S6.png",width=1200,height=800,res=160)
 plot_grid(plot_acp,pl2,ncol=2,align="hv")
 dev.off();
 
@@ -67,6 +77,23 @@ scale_color_viridis(option="E")+ggtitle("b")+coord_fixed(ratio=1,expand=F)+ylim(
 ylab("Feasibility when including seasonal structure")+
 xlab("Feasibility when neglecting seasonal structure")+labs(color=expression(N[sp]))
 
+empf2$dive=empf2$na+empf2$np
+b=melt(empf2,id.vars="dive",measure.vars=c("feas_with_pheno","feas_without_pheno"))
+b$variable=as.character(b$variable)
+b$variable[b$variable=="feas_without_pheno"]="without seasonal structure"
+b$variable[b$variable=="feas_with_pheno"]="with seasonal structure"
+
+
+pl2=ggplot(data=b,aes(x=dive,y=value,color=variable,fill=variable))+
+geom_point(size=2,alpha=0.9)+
+stat_smooth(method="glm",alpha=0.2,,method.args = list(family = quasibinomial(link = 'logit')))+
+theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),
+panel.border=element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
+strip.background=element_rect(fill=NA,color=NA),legend.position = c(0.75, 0.9))+scale_fill_manual(values=c("black","grey"))+
+scale_color_manual(values=c("black","grey"))+ggtitle("b")+coord_cartesian()+
+ylab("Size of the feasibility domain")+
+xlab("Diversity")+labs(color="",fill="")
+
 
 pl3=ggplot(data=empf,aes(x=as.factor(competition),y=feas_without_pheno/feas_with_pheno-1,color=as.factor(rho)))+
 geom_hline(linetype="dashed",yintercept=0)+
@@ -77,7 +104,7 @@ panel.border=element_blank(),panel.background = element_blank(),plot.title=eleme
 strip.background=element_rect(fill=NA,color=NA))+
 scale_color_manual(values=colo)+ggtitle("c")+
 scale_y_continuous(labels=scales::percent)+ylab("Decrease in feasibility\nwhen neglecting seasonal structure")+
-xlab("Competition strength")+scale_colour_viridis(option="D",discrete=TRUE)+labs(color=expression(rho))
+xlab("Competition strength")+scale_colour_viridis(option="rocket",discrete=TRUE,direction=-1)+labs(color=expression(rho))
 
 
 plot_grid(pl1,pl2,pl3,ncol=3,align="hv",rel_widths=c(0.75,2,1.5))
