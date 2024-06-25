@@ -178,7 +178,7 @@ geom_boxplot(width=3,position=position_dodge(width=0.5))+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.background = element_blank(),
 strip.background=element_rect(fill=NA,color=NA),panel.border=element_blank())+
 scale_color_manual(values=colo)+scale_fill_manual(values=colo)+
-labs(linetype=expression(paste(n[sp]," / guild")))+ylab("Size of the feasibility domain")+xlab("Time")+facet_grid(cols=vars(rich), labeller = label_bquote(cols=n[sp] == .(rich)))+scale_x_sqrt(breaks=c(0,2000))
+labs(linetype=expression(paste(n[sp]," / guild")))+ylab(expression(paste("Structural stability  ",(omega))))+xlab("Time")+facet_grid(cols=vars(rich), labeller = label_bquote(cols=n[sp] == .(rich)))+scale_x_sqrt(breaks=c(0,2000))
 
 png("Fig.S4.png",width=1200,height=600,res=150)
 pl6
@@ -189,7 +189,7 @@ geom_boxplot(width=3,position=position_dodge(width=0.5))+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.background = element_blank(),
 strip.background=element_rect(fill=NA,color=NA),panel.border=element_blank())+
 scale_color_manual(values=colo)+scale_fill_manual(values=colo)+
-labs(linetype=expression(paste(n[sp]," / guild")))+ylab("Size of the feasibility domain")+xlab("Time")+facet_grid(cols=vars(rich), labeller = label_bquote(cols=n[sp] == .(rich)))+scale_x_sqrt(breaks=c(0,2000))
+labs(linetype=expression(paste(n[sp]," / guild")))+ylab(expression(paste("Structural stability  ",(omega))))+xlab("Time")+facet_grid(cols=vars(rich), labeller = label_bquote(cols=n[sp] == .(rich)))+scale_x_sqrt(breaks=c(0,2000))
 
 plot_grid(pl6,pl6b,ncol=1,align="hv")
 
@@ -205,21 +205,21 @@ geom_boxplot(width=3,position=position_dodge(width=0.5))+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.background = element_blank(),
 strip.background=element_rect(fill=NA,color=NA),panel.border=element_blank())+
 scale_color_manual(values=colo)+scale_fill_manual(values=colo)+
-labs(linetype=expression(paste(n[sp]," / guild")))+ylab("Size of the feasibility domain")+xlab("Time")+facet_grid(cols=vars(rich), labeller = label_bquote(cols=n[sp] == .(rich)))+scale_x_sqrt(breaks=c(0,2000))+ggtitle("a",subtitle="low interspecific competition")
+labs(linetype=expression(paste(n[sp]," / guild")))+ylab(expression(paste("Structural stability  ",(omega))))+xlab("Time")+facet_grid(cols=vars(rich), labeller = label_bquote(cols=n[sp] == .(rich)))+scale_x_sqrt(breaks=c(0,2000))+ggtitle("a",subtitle="low interspecific competition")
 
 pl6b=ggplot(data=subset(indf4,rho==0.4),aes(x=time,y=feas,color=trait,group=paste(time,trait)))+geom_violin(position=position_dodge(width=0.5),width=8,scale="width",show.legend=FALSE)+
 geom_boxplot(width=3,position=position_dodge(width=0.5))+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
 strip.background=element_rect(fill=NA,color=NA),panel.border=element_blank())+
 scale_color_manual(values=colo)+scale_fill_manual(values=colo)+
-labs(linetype=expression(paste(n[sp]," / guild")))+ylab("Size of the feasibility domain")+xlab("Time")+facet_grid(cols=vars(rich), labeller = label_bquote(cols=n[sp] == .(rich)))+scale_x_sqrt(breaks=c(0,2000))+ggtitle("b",subtitle="high interspecific competition")
+labs(linetype=expression(paste(n[sp]," / guild")))+ylab(expression(paste("Structural stability  ",(omega))))+xlab("Time")+facet_grid(cols=vars(rich), labeller = label_bquote(cols=n[sp] == .(rich)))+scale_x_sqrt(breaks=c(0,2000))+ggtitle("b",subtitle="high interspecific competition")
 
 plot_grid(pl6,pl6b,ncol=1,align="hv")
 png("Fig.S5.png",width=1200,height=1000,res=150)
 plot_grid(pl6,pl6b,ncol=1,align="hv")
 dev.off();
 
-############################# FIGURE 5
+############################# FIGURE 4
 indf5=subset(indf4,time %in% c(0,2000))
 
 pl7=ggplot(data=subset(indf5,time==0),aes(x=rich,y=feas,color=as.factor(rho)))+
@@ -227,7 +227,7 @@ stat_summary(fun.y=mean, geom="line", size = 0.5,position=position_dodge(width=0
 stat_summary(fun.y = mean, fun.ymin = function(x) mean(x) - sd(x), fun.ymax = function(x) mean(x) + sd(x), geom = "pointrange")+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
 strip.background=element_rect(fill=NA,color=NA),panel.border=element_blank())+
-labs(linetype=expression(paste(n[sp]," / guild")))+ylab("Size of the feasibility domain")+xlab("Number of species per guild")+facet_wrap(~trait)+scale_colour_viridis(option="rocket",discrete=TRUE,direction=-1)+
+labs(linetype=expression(paste(n[sp]," / guild")))+ylab(expression(paste("Structural stability  ",(omega))))+xlab("Number of species per guild")+facet_wrap(~trait)+scale_colour_viridis(option="rocket",discrete=TRUE,direction=-1)+
 #scale_color_brewer(palette = "Reds")+
 labs(colour=expression(rho))+ggtitle("a",subtitle="Initial networks")
 
@@ -236,7 +236,7 @@ stat_summary(fun.y=mean, geom="line", size = 0.5,position=position_dodge(width=0
 stat_summary(fun.y = mean, fun.ymin = function(x) mean(x) - sd(x), fun.ymax = function(x) mean(x) + sd(x), geom = "pointrange")+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
 strip.background=element_rect(fill=NA,color=NA),panel.border=element_blank())+
-labs(linetype=expression(paste(n[sp]," / guild")))+ylab("Size of the feasibility domain")+xlab("Number of species per guild")+facet_wrap(~trait)+scale_colour_viridis(option="rocket",discrete=TRUE,direction=-1)+
+labs(linetype=expression(paste(n[sp]," / guild")))+ylab(expression(paste("Structural stability  ",(omega))))+xlab("Number of species per guild")+facet_wrap(~trait)+scale_colour_viridis(option="rocket",discrete=TRUE,direction=-1)+
 #scale_color_brewer(palette = "Reds")+
 labs(colour=expression(rho))+ggtitle("b",subtitle="Coevolved networks")
 

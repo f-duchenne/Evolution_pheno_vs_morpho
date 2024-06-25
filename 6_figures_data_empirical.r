@@ -96,7 +96,7 @@ theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = e
 panel.border=element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
 strip.background=element_rect(fill=NA,color=NA),legend.position = c(0.75, 0.9))+scale_fill_manual(values=c("black","grey"))+
 scale_color_manual(values=c("black","grey"))+ggtitle("b")+coord_cartesian()+
-ylab("Size of the feasibility domain")+
+ylab(expression(paste("Structural stability  ",(omega))))+
 xlab("Diversity")+labs(color="",fill="")
 
 
@@ -108,7 +108,7 @@ theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = e
 panel.border=element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
 strip.background=element_rect(fill=NA,color=NA))+
 scale_color_manual(values=colo)+ggtitle("c")+
-scale_y_continuous(labels=scales::percent)+ylab("Decrease in feasibility\nwhen neglecting seasonal structure")+
+scale_y_continuous(labels=scales::percent)+ylab("Decrease in structural stability\nwhen neglecting seasonal structure")+
 xlab("Competition strength")+scale_colour_manual(values=rev(scales::viridis_pal(option="rocket")(6))[1:3])+labs(color=expression(rho))
 
 
