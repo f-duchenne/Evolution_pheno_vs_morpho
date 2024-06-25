@@ -102,7 +102,7 @@ pdf("Fig.1.pdf",width=9,height=9)
 grid.arrange(top,bottom,ncol=1,heights=c(2,1))
 dev.off();
 
-##################### FIGURE S2
+##################### FIGURE S1
 
 indf3=subset(indf,competition==5  & rho==0.01)
 

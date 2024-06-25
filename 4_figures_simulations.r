@@ -5,7 +5,7 @@
 #+ message = FALSE
 rm(list=ls())
 pkgs <- c("data.table", "dplyr","R2jags","ggplot2","bipartite","FactoMineR","factoextra","gridExtra","cowplot","ggpubr","scales","piecewiseSEM",
-"igraph","qgraph","car","nlme","viridis","colorbrewer") 
+"igraph","qgraph","car","nlme","viridis") 
 
 inst <- pkgs %in% installed.packages()
 if (any(inst)) install.packages(pkgs[!inst])
@@ -19,6 +19,19 @@ invlogit1=function(x){return(80+205*exp(x)/(1+exp(x)))}
 setwd(dir="C:/Users/Duchenne/Documents/evolution_pheno_morpho")
 datf=fread("species_level_data.csv")
 endpo=subset(datf,time==2000 & comp==10)
+
+
+datf2=subset(datf,comp==10 & time %in% plyr::round_any(seq(sqrt(0),sqrt(2000),length.out=20)^2,10)) %>% group_by(type,species,comp,essai,rich,trait) %>% mutate(delta=sqrt((value-lag(value))^2)/(time-lag(time)))
+
+s7=ggplot(subset(datf2,time>0),aes(x=time,y=delta,color=trait))+
+stat_smooth()+
+theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.position="none",
+strip.background=element_rect(fill=NA,color=NA))+scale_color_manual(values=colo)+ylab("Changes in trait parameters")+
+facet_grid(cols=vars(rich),rows=vars(type),labeller = label_bquote(cols=n[sp] == .(rich)))
+
+png("Fig.S7.png",width=1200,height=800,res=150)
+s7
+dev.off();
 
 sp1=ggplot()+
 geom_density(data=subset(endpo,type=="mu"),aes(x=invlogit1(value),color=trait,fill=trait),alpha=0.2)+
@@ -54,11 +67,24 @@ names(indf)[3]="inter. evenness"
 names(indf)[5]="wNODF"
 
 indf$prop_motif=(indf$motifn/indf$motifntot)
-model=glmmTMB(feas~(prop_motif+rich)*trait+(1|essai),family=beta_family(link="logit"),data=subset(indf,competition==10 & rho==0.2 & time==2000))
+model=glmmTMB::glmmTMB(feas~(prop_motif+rich)*trait+(1|essai),family=beta_family(link="logit"),data=subset(indf,competition==10 & rho==0.2 & time==2000))
 
 indf2=subset(indf,competition==10 & rho==0.01)
 acp=PCA(indf2[,1:6],graph=FALSE)
 indf2=cbind(indf2,acp$ind$coord)
+
+
+indfspeed=indf2 %>% group_by(trait,competition,essai,rich) %>% mutate(speed=sqrt((Dim.1-lag(Dim.1))^2+(Dim.2-lag(Dim.2))^2+(Dim.3-lag(Dim.3))^2)/(time-lag(time)))
+
+s8=ggplot(subset(indfspeed,time>0),aes(x=time,y=speed,color=trait))+geom_line(alpha=0.2,aes(group=paste(essai,competition,trait,rich)))+
+stat_smooth()+
+theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.position="none",
+strip.background=element_rect(fill=NA,color=NA))+scale_color_manual(values=colo)+ylab("Changes in network structure")
+
+png("Fig.S8.png",width=1200,height=600,res=150)
+s8
+dev.off();
+
 
 pl1=ggplot(data=subset(indf2,rich==10),aes(x=Dim.1,y=Dim.2,alpha=time,color=trait,group=paste(essai,trait)))+
 geom_vline(xintercept=0,linetype="dashed")+
@@ -121,7 +147,6 @@ xlab(paste0("Dimension 1 (",round(acp$eig[1,2],digits=1)," %)"))+
 ylab(paste0("Dimension 2 (",round(acp$eig[2,2],digits=1)," %)"))+
 scale_color_manual(values=colo)+ggtitle("a")
 
-
 pl4=ggplot(data=subset(indf3,time==2000),aes(x=as.factor(rich),y=wNODF,color=trait))+geom_violin(position=position_dodge(width=0.5),width=1,scale="width")+
 geom_boxplot(width=0.1,position=position_dodge(width=0.5))+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
@@ -151,7 +176,7 @@ indf4=subset(indf,competition==10)
 pl6=ggplot(data=subset(indf4,rho==0.05),aes(x=time,y=feas,color=trait,group=paste(time,trait)))+geom_violin(position=position_dodge(width=0.5),width=8,scale="width",show.legend=FALSE)+
 geom_boxplot(width=3,position=position_dodge(width=0.5))+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.background = element_blank(),
-strip.background=element_rect(fill=NA,color=NA))+
+strip.background=element_rect(fill=NA,color=NA),panel.border=element_blank())+
 scale_color_manual(values=colo)+scale_fill_manual(values=colo)+
 labs(linetype=expression(paste(n[sp]," / guild")))+ylab("Size of the feasibility domain")+xlab("Time")+facet_grid(cols=vars(rich), labeller = label_bquote(cols=n[sp] == .(rich)))+scale_x_sqrt(breaks=c(0,2000))
 
@@ -162,7 +187,7 @@ dev.off();
 pl6b=ggplot(data=subset(indf4,rho==0.4),aes(x=time,y=feas,color=trait,group=paste(time,trait)))+geom_violin(position=position_dodge(width=0.5),width=8,scale="width",show.legend=FALSE)+
 geom_boxplot(width=3,position=position_dodge(width=0.5))+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.background = element_blank(),
-strip.background=element_rect(fill=NA,color=NA))+
+strip.background=element_rect(fill=NA,color=NA),panel.border=element_blank())+
 scale_color_manual(values=colo)+scale_fill_manual(values=colo)+
 labs(linetype=expression(paste(n[sp]," / guild")))+ylab("Size of the feasibility domain")+xlab("Time")+facet_grid(cols=vars(rich), labeller = label_bquote(cols=n[sp] == .(rich)))+scale_x_sqrt(breaks=c(0,2000))
 
@@ -175,14 +200,14 @@ dev.off();
 ############################## FIGURE S5
 indf4=subset(indf,competition==5)
 
-pl6=ggplot(data=subset(indf4,rho==0.05),aes(x=as.factor(time),y=feas,color=trait,group=paste(time,trait)))+geom_violin(position=position_dodge(width=0.5),width=8,scale="width",show.legend=FALSE)+
+pl6=ggplot(data=subset(indf4,rho==0.05),aes(x=time,y=feas,color=trait,group=paste(time,trait)))+geom_violin(position=position_dodge(width=0.5),width=8,scale="width",show.legend=FALSE)+
 geom_boxplot(width=3,position=position_dodge(width=0.5))+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.background = element_blank(),
-strip.background=element_rect(fill=NA,color=NA))+
+strip.background=element_rect(fill=NA,color=NA),panel.border=element_blank())+
 scale_color_manual(values=colo)+scale_fill_manual(values=colo)+
 labs(linetype=expression(paste(n[sp]," / guild")))+ylab("Size of the feasibility domain")+xlab("Time")+facet_grid(cols=vars(rich), labeller = label_bquote(cols=n[sp] == .(rich)))+scale_x_sqrt(breaks=c(0,2000))+ggtitle("a",subtitle="low interspecific competition")
 
-pl6b=ggplot(data=subset(indf4,rho==0.4),aes(x=as.factor(time),y=feas,color=trait,group=paste(time,trait)))+geom_violin(position=position_dodge(width=0.5),width=8,scale="width",show.legend=FALSE)+
+pl6b=ggplot(data=subset(indf4,rho==0.4),aes(x=time,y=feas,color=trait,group=paste(time,trait)))+geom_violin(position=position_dodge(width=0.5),width=8,scale="width",show.legend=FALSE)+
 geom_boxplot(width=3,position=position_dodge(width=0.5))+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
 strip.background=element_rect(fill=NA,color=NA),panel.border=element_blank())+

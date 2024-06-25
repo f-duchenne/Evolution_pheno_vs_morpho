@@ -75,7 +75,7 @@ nrandom=20
 for(competition in c(5,10)){
 for (rich in c(10,20,30)){
 for(tr in c("morpho","pheno")){
-for(ti in seq(sqrt(0),sqrt(2000),length.out=9)^2){
+for(ti in plyr::round_any(seq(sqrt(0),sqrt(2000),length.out=9)^2,10)){
 bidon=subset(datf,essai==ess & time==ti & trait==tr & rich==rich & comp==competition)
 
 #build interaction matrix:
@@ -199,6 +199,15 @@ indf=rbind(indf,ind)
 fwrite(indf,paste0("/home/duchenne/pheno/aggreg_simues/networks_info_",ess,".csv"))
 
 ####################
+#' Check for packages and if necessary install into library 
+#+ message = FALSE
+rm(list=ls())
+pkgs <- c("data.table", "dplyr","R2jags","ggplot2","bipartite","FactoMineR","factoextra","gridExtra","cowplot","ggpubr","scales") 
+
+inst <- pkgs %in% installed.packages()
+if (any(inst)) install.packages(pkgs[!inst])
+pkg.out <- lapply(pkgs, require, character.only = TRUE)
+
 indf=NULL
 for(ess in 1:100){
 ind=fread(paste0("C:/Users/Duchenne/Documents/evolution_pheno_morpho/aggreg_simues/networks_info_",ess,".csv"))
