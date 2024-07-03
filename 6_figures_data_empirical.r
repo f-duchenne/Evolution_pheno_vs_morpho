@@ -69,7 +69,7 @@ theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = e
 axis.title.x=element_blank(),
 strip.background=element_rect(fill=NA,color=NA))+
 scale_color_manual(values=colo)+ggtitle("a")+
-ylab("Percentage of 'V' motifs promoting facilitation")+scale_y_continuous(labels=scales::percent)
+ylab('Percentage of "V+" motifs')+scale_y_continuous(labels=scales::percent)
 
 
 pl2=ggplot(data=empf2,aes(x=feas_without_pheno,y=feas_with_pheno))+

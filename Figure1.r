@@ -78,7 +78,7 @@ theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = e
 panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
 strip.background=element_rect(fill=NA,color=NA),
 legend.key = element_rect(fill = "white"))+
-scale_color_manual(values=colo)+scale_fill_manual(values=colo)+ylab("Proportion of 'V' motifs promoting facilitation")+
+scale_color_manual(values=colo)+scale_fill_manual(values=colo)+ylab('Proportion of "V+" motifs')+
 xlab("Time")+ggtitle("b")+labs(linetype=expression(paste(n[sp]," / guild")))+
 guides(linetype=guide_legend(override.aes = list(fill = "white",colour="black")))
 
