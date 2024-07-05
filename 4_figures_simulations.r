@@ -222,6 +222,37 @@ dev.off();
 ############################# FIGURE 4
 indf5=subset(indf4,time %in% c(0,2000))
 
+pl7=ggplot(data=subset(indf5,time==0),aes(x=rich,y=feas,color=trait,alpha=as.factor(rho)))+
+stat_summary(fun.y=mean, geom="line", size = 0.5,position=position_dodge(width=0.5))+
+stat_summary(fun.y = mean, fun.ymin = function(x) mean(x) - sd(x), fun.ymax = function(x) mean(x) + sd(x), geom = "pointrange")+
+theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
+strip.background=element_rect(fill=NA,color=NA),panel.border=element_blank())+
+labs(linetype=expression(paste(n[sp]," / guild")))+ylab(expression(paste("Structural stability  ",(omega))))+xlab("Number of species per guild")+facet_wrap(~trait)+scale_color_manual(values=colo,guide=FALSE)+scale_fill_manual(values=colo)+
+#scale_color_brewer(palette = "Reds")+
+labs(alpha=expression(rho))+ggtitle("a",subtitle="Initial networks")
+
+pl8=ggplot(data=subset(indf5,time==2000),aes(x=rich,y=feas,color=trait,alpha=as.factor(rho)))+
+stat_summary(fun.y=mean, geom="line", size = 0.5,position=position_dodge(width=0.5))+
+stat_summary(fun.y = mean, fun.ymin = function(x) mean(x) - sd(x), fun.ymax = function(x) mean(x) + sd(x), geom = "pointrange")+
+theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
+strip.background=element_rect(fill=NA,color=NA),panel.border=element_blank())+
+labs(linetype=expression(paste(n[sp]," / guild")))+ylab(expression(paste("Structural stability  ",(omega))))+xlab("Number of species per guild")+facet_wrap(~trait)+scale_color_manual(values=colo,guide=FALSE)+scale_fill_manual(values=colo)+
+#scale_color_brewer(palette = "Reds")+
+labs(alpha=expression(rho))+ggtitle("b",subtitle="Coevolved networks")
+
+plot_grid(pl7,pl8,ncol=1,align="hv")
+
+pdf("Fig.4.pdf",width=6,height=6)
+plot_grid(pl7,pl8,ncol=1,align="hv")
+dev.off();
+
+indf %>% group_by(rich,trait,time) %>% summarise(mean(feas))
+
+
+
+
+indf5=subset(indf4,time %in% c(0,2000))
+
 pl7=ggplot(data=subset(indf5,time==0),aes(x=rich,y=feas,color=as.factor(rho)))+
 stat_summary(fun.y=mean, geom="line", size = 0.5,position=position_dodge(width=0.5))+
 stat_summary(fun.y = mean, fun.ymin = function(x) mean(x) - sd(x), fun.ymax = function(x) mean(x) + sd(x), geom = "pointrange")+
@@ -239,33 +270,3 @@ strip.background=element_rect(fill=NA,color=NA),panel.border=element_blank())+
 labs(linetype=expression(paste(n[sp]," / guild")))+ylab(expression(paste("Structural stability  ",(omega))))+xlab("Number of species per guild")+facet_wrap(~trait)+scale_colour_viridis(option="rocket",discrete=TRUE,direction=-1)+
 #scale_color_brewer(palette = "Reds")+
 labs(colour=expression(rho))+ggtitle("b",subtitle="Coevolved networks")
-
-pdf("Fig.4.pdf",width=6,height=6)
-plot_grid(pl7,pl8,ncol=1,align="hv")
-dev.off();
-
-indf %>% group_by(rich,trait,time) %>% summarise(mean(feas))
-
-
-
-indf5=subset(indf4,time %in% c(0,2000))
-
-pl7=ggplot(data=subset(indf5,time==0),aes(x=rich,y=feas,color=trait,alpha=as.factor(rho)))+
-stat_summary(fun.y=mean, geom="line", size = 0.5,position=position_dodge(width=0.5))+
-stat_summary(fun.y = mean, fun.ymin = function(x) mean(x) - sd(x), fun.ymax = function(x) mean(x) + sd(x), geom = "pointrange")+
-theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
-strip.background=element_rect(fill=NA,color=NA),panel.border=element_blank())+
-labs(linetype=expression(paste(n[sp]," / guild")))+ylab(expression(paste("Structural stability  ",(omega))))+xlab("Number of species per guild")+facet_wrap(~trait)+scale_color_manual(values=colo)+scale_fill_manual(values=colo)+
-#scale_color_brewer(palette = "Reds")+
-labs(alpha=expression(rho))+ggtitle("a",subtitle="Initial networks")
-
-pl8=ggplot(data=subset(indf5,time==2000),aes(x=rich,y=feas,color=trait,alpha=as.factor(rho)))+
-stat_summary(fun.y=mean, geom="line", size = 0.5,position=position_dodge(width=0.5))+
-stat_summary(fun.y = mean, fun.ymin = function(x) mean(x) - sd(x), fun.ymax = function(x) mean(x) + sd(x), geom = "pointrange")+
-theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
-strip.background=element_rect(fill=NA,color=NA),panel.border=element_blank())+
-labs(linetype=expression(paste(n[sp]," / guild")))+ylab(expression(paste("Structural stability  ",(omega))))+xlab("Number of species per guild")+facet_wrap(~trait)+scale_color_manual(values=colo)+scale_fill_manual(values=colo)+
-#scale_color_brewer(palette = "Reds")+
-labs(alpha=expression(rho))+ggtitle("b",subtitle="Coevolved networks")
-
-plot_grid(pl7,pl8,ncol=1,align="hv")
