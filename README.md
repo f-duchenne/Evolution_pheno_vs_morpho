@@ -12,7 +12,7 @@ In this folder *flow_pheno_empirical.csv* and *poll_pheno_empirical.csv* contain
 
 You can access it in R via:
 
-'''
+```
 #load data
 load("matrices_empirical_networks.RData")
 
@@ -21,4 +21,4 @@ str(networks)
 
 #access the first network
 networks[[1]]
-'''
+```
