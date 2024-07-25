@@ -1,8 +1,16 @@
 This folder contains all the main script used to reproduce simulations and analyses.
 
+# Codes
+
 The folder "functions and secondary scripts" contains some functions that are called in the main scripts or alternative scripts that have been used while building up the project, for exploration.
 
 Scripts 1 to 4 regards in silico simulations, while scripts 5 to 6 merge simulations and empirical data.
+
+Script 2 is a Julia script, which is used to perform the coevolution simulations, and ran on a HPC plateform.
+
+The middle part of script 3, was also ran on a HPC plateform to gain time.
+
+# Empirical data
 
 The empirical data can be found here: *link to come*
 
