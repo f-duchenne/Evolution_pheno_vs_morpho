@@ -9,11 +9,13 @@ inst <- pkgs %in% installed.packages()
 if (any(inst)) install.packages(pkgs[!inst])
 pkg.out <- lapply(pkgs, require, character.only = TRUE)
 
-setwd(dir="C:/Users/Duchenne/Documents/evolution_pheno_morpho/scripts")
+setwd(dir="C:/Users/Duchenne/Documents/evolution_pheno_morpho/scripts/functions and secondary scripts")
 source("toolbox.R")
 setwd(dir="C:/Users/Duchenne/Documents/evolution_pheno_morpho/")
-fread("flower_pheno_empirical.csv")
-fread("poll_pheno_empirical.csv")
+phenp=fread("flower_pheno_empirical.csv")
+phenp[phenp$sde<1]=1
+phena=fread("poll_pheno_empirical.csv")
+phena[phena$sde<1]=1
 load("matrices_empirical_networks.RData")
 
 sites=names(networks)

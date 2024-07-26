@@ -9,7 +9,7 @@ inst <- pkgs %in% installed.packages()
 if (any(inst)) install.packages(pkgs[!inst])
 pkg.out <- lapply(pkgs, require, character.only = TRUE)
 
-setwd(dir="C:/Users/Duchenne/Documents/evolution_pheno_morpho/scripts")
+setwd(dir="C:/Users/Duchenne/Documents/evolution_pheno_morpho/scripts/functions and secondary scripts")
 
 source("toolbox.R")
 
@@ -43,7 +43,7 @@ datf=rbind(datf,dat2)
 setwd(dir="C:/Users/Duchenne/Documents/evolution_pheno_morpho/")
 fwrite(datf,"species_level_data.csv")
 
-###########################################
+########################################### TO ran on HPC
 ###########################################
 #' Check for packages and if necessary install into library 
 #+ message = FALSE
@@ -53,8 +53,8 @@ inst <- pkgs %in% installed.packages()
 if (any(inst)) install.packages(pkgs[!inst])
 pkg.out <- lapply(pkgs, require, character.only = TRUE)
 
-setwd(dir="/home/duchenne/pheno")
-source("/home/duchenne/pheno/toolbox.R")
+setwd(dir="/home/duchenne/pheno") #run on a cluster
+source("/home/duchenne/pheno/toolbox.R")  #run on a cluster
 invlogit=function(x){return(1+49*exp(x)/(1+exp(x)))}
 invlogit1=function(x){return(80+205*exp(x)/(1+exp(x)))}
 
@@ -198,7 +198,7 @@ indf=rbind(indf,ind)
 
 fwrite(indf,paste0("/home/duchenne/pheno/aggreg_simues/networks_info_",ess,".csv"))
 
-####################
+#################### AGGREGATE NETWORKS INFORMATION IN A UNIQUE TABLE
 #' Check for packages and if necessary install into library 
 #+ message = FALSE
 rm(list=ls())
