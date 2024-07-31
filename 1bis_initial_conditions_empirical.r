@@ -10,9 +10,9 @@ if (any(inst)) install.packages(pkgs[!inst])
 pkg.out <- lapply(pkgs, require, character.only = TRUE)
 
 setwd(dir="C:/Users/Duchenne/Documents/evolution_pheno_morpho/")
-empf=fread("empirical_networks_binary.csv")
+load("matrices_empirical_networks.RData")
 
-liste=unique(empf[,c("site","na","np")])
+liste=data.frame(site=names(networks),na=sapply(networks,ncol),np=sapply(networks,nrow))
 
 nbrep=10
 
