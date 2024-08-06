@@ -4,7 +4,7 @@ The folder "functions and secondary scripts" contains some functions that are ca
 
 # Codes
 
-## Initial conditions
+### Initial conditions
 
 Scripts 1 & 1bis defined initial conditions for theoretical and empirical communities, respectively, to allows the reproducibility of the simulations.
 
