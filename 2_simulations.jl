@@ -15,7 +15,7 @@ using QuadGK
 const jj=ARGS[1]
 println("essai",jj)
 
-include("C:/Users/Duchenne/Documents/evolution_pheno_morpho/scripts/derivatives_function_m_pheno_or_morpho_bar_discrete.jl")
+include("C:/Users/Duchenne/Documents/evolution_pheno_morpho/scripts/derivatives_function_m_pheno_or_morpho_discrete.jl")
 const alpha=1.0
 const r=-0.5
 const epsilon=0.001
