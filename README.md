@@ -8,17 +8,17 @@ The folder "functions and secondary scripts" contains some functions that are ca
 
 Scripts 1 & 1bis defined initial conditions for theoretical and empirical communities, respectively, to allows the reproducibility of the simulations.
 
-## Simulations under Julia
+### Simulations under Julia
 
 Script 2 & 2bis are Julia scripts that were used to perform the coevolution simulations, using theoretitcal and empirical initial conditions, respectively. The ran on a HPC plateform.
 
-## Extracts and plot the results of theoretical simulations 
+### Extracts and plot the results of theoretical simulations 
 
 Script 3 extracts community measures from theoretical simulations. The middle part of script 3, was also ran on a HPC plateform to gain time.
 
 Script 4 plots the results, from figure 2 to figure 4. Figure 1 was done in a sepate scripts labelled *Figure1.r*
 
-## Analyse empirical data and simulations with empirical initial conditions (=with empirical network dimensions) 
+### Analyse empirical data and simulations with empirical initial conditions (=with empirical network dimensions) 
 
 Scripts 5 extracts communitiy measures from empirical networks and from simulations performed with initial empirical network sizes. 
 
