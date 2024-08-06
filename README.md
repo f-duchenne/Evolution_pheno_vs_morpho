@@ -10,7 +10,7 @@ Scripts 1 & 1bis defined initial conditions for theoretical and empirical commun
 
 ### Simulations under Julia
 
-Script 2 & 2bis are Julia scripts that were used to perform the coevolution simulations, using theoretitcal and empirical initial conditions, respectively. The ran on a HPC plateform.
+Script 2 & 2bis are Julia scripts that were used to perform the coevolution simulations, using theoretical and empirical initial conditions, respectively. The ran on a HPC plateform.
 
 ### Extracts and plot the results of theoretical simulations 
 
