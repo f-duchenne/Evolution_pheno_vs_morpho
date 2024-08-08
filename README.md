@@ -26,7 +26,7 @@ Script 6 merges community measures from empirical networks and simulations to do
 
 # Empirical data
 
-The empirical data can be found here: *link to come*
+The empirical data can be found here: https://doi.org/10.5281/zenodo.13270452
 
 *flow_pheno_empirical.csv* and *poll_pheno_empirical.csv* contain the empirical phenological parameters for plant and pollinator species, respectively: the mean activity day (mu) and its standard deviation (sde) representing the duration of the activity period.
 
