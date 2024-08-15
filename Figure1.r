@@ -12,7 +12,7 @@ pkg.out <- lapply(pkgs, require, character.only = TRUE)
 setwd(dir="C:/Users/Duchenne/Documents/evolution_pheno_morpho/")
 
 preci=1000
-dat=data.frame(species=rep(c("plant","poll1","poll2"),each=preci),x=seq(0,365,length.out=preci),mu=rep(c(190,150,220),each=preci),sd=rep(c(30,20,20),each=preci))
+dat=data.frame(species=rep(c("plant","poll1","poll2"),each=preci),x=seq(0,365,length.out=preci),mu=rep(c(190,150,230),each=preci),sd=rep(c(30,20,20),each=preci))
 dat$abund=dnorm(dat$x,dat$mu,dat$sd)
 
 overlaps=dcast(dat,x~species,value.var="abund")
