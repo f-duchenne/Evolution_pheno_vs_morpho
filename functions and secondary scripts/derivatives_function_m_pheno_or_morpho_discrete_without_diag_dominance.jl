@@ -31,11 +31,6 @@
         sd_phen_a = invlogit.(u[(1+nbsp_a*2+nbsp_p*2):(nbsp_a*3+nbsp_p*2)])
         mu_phen_p =invlogit1.(u[(1+nbsp_a*2+nbsp_p):(nbsp_a*2+nbsp_p*2)])
         sd_phen_p = invlogit.(u[(1+nbsp_a*3+nbsp_p*2):(nbsp_a*3+nbsp_p*3)])
-        #morpho
-        mu_morpho_a = invlogit1.(u[(1+nbsp_a*3+nbsp_p*3):(nbsp_a*4+nbsp_p*3)])
-        sd_morpho_a = invlogit.(u[(1+nbsp_a*2+nbsp_p*2):(nbsp_a*3+nbsp_p*2)])
-        mu_morpho_p =invlogit1.(u[(1+nbsp_a*2+nbsp_p):(nbsp_a*2+nbsp_p*2)])
-        sd_morpho_p = invlogit.(u[(1+nbsp_a*3+nbsp_p*2):(nbsp_a*3+nbsp_p*3)])
         #abundances
         abund_poll= @view u[1:nbsp_a]
         abund_flower= @view u[(1+nbsp_a):(nbsp_a+nbsp_p)]
@@ -113,7 +108,7 @@
                     return(comp_interactions)
                 end
                 comp_interactions = comp_inter_a(p3)
-                comp_interactions[i,] = 1.0
+                comp_interactions[i,] = sum(mut_interactions .* mut_interactions) / (sum(mut_interactions))
                 d_pop= r .+ alpha*sum(mut_interactions .* abund_flower) .- competition*sum(comp_interactions .* abund_poll)
                 return d_pop
             end
@@ -165,7 +160,7 @@
                     return(comp_interactions)
                 end
                 comp_interactions= comp_inter_p(p2)
-                comp_interactions[(i-nbsp_a),] = 1.0
+                comp_interactions[(i-nbsp_a),] = sum(mut_interactions .* mut_interactions) / (sum(mut_interactions))
                 d_pop= r .+ alpha*sum(mut_interactions .* abund_poll) .- competition*sum(comp_interactions .* abund_flower)
                 return d_pop
             end

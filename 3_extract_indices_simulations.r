@@ -53,8 +53,8 @@ inst <- pkgs %in% installed.packages()
 if (any(inst)) install.packages(pkgs[!inst])
 pkg.out <- lapply(pkgs, require, character.only = TRUE)
 
-setwd(dir="/home/duchenne/pheno") #run on a cluster
-source("/home/duchenne/pheno/toolbox.R")  #run on a cluster
+setwd(dir="/home/duchenne/pheno")
+source("/home/duchenne/pheno/toolbox.R")
 invlogit=function(x){return(1+49*exp(x)/(1+exp(x)))}
 invlogit1=function(x){return(80+205*exp(x)/(1+exp(x)))}
 
@@ -71,7 +71,8 @@ datf=fread("/home/duchenne/pheno/species_level_data.csv")
 
 indf=NULL
 motifs=NULL
-nrandom=20
+
+
 for(competition in c(5,10)){
 for (rich in c(10,20,30)){
 for(tr in c("morpho","pheno")){
@@ -92,13 +93,13 @@ for(i in 1:rich){
 }
 
 struf=NULL
-for(rr in 1:nrandom){
-mbi=apply(m, 1L:2L, function(p) rbinom(1, 5, p))
-# mbi[mbi>0]=1
-# mbi=m
-stru=networklevel(mbi,index=c("connectance","nestedness","interaction evenness","H2"),H2_integer=TRUE)
+for(rr in c(0.05)){
+#mbi=apply(m, 1L:2L, function(p) rbinom(1, 5, p))
+#mbi[mbi>0]=1
+mbi=round(m,digits=5)
+stru=networklevel(mbi,index=c("weighted connectance","weighted nestedness","interaction evenness","H2"),H2_integer=FALSE)
 stru=as.data.frame(t(stru))
-stru$NODF=networklevel(round(mbi,digits=5),index=c("NODF"))
+stru$NODF=networklevel(round(mbi,digits=5),index=c("weighted NODF"))
 stru$modularity=computeModules(mbi, method="Beckett")@"likelihood"
 struf=rbind(struf,stru)
 }
@@ -122,10 +123,11 @@ for(i in 1:rich){
 		f=function(x){pmin(dnorm(x,mu1,sd1),dnorm(x,mu2,sd2))}
 		phen=sum(f(seq(0,365,0.1)))*0.1
 		phen_a[i,j]=phen
-		comp_a[i,j]=ifelse(tr=="pheno",phen*similarity,similarity)
+		comp_a[i,j]=similarity
 	}  
 }
 diag(comp_a)=1
+diag(phen_a)=1
 
 #build competition matrix for plants:
 comp_p = matrix(NA, rich, rich)
@@ -140,10 +142,11 @@ for(i in 1:rich){
 		f=function(x){pmin(dnorm(x,mu1,sd1),dnorm(x,mu2,sd2))}
 		phen=sum(f(seq(0,365,0.1)))*0.1
 		phen_p[i,j]=phen
-		comp_p[i,j]=ifelse(tr=="pheno",phen*similarity,similarity)
+		comp_p[i,j]=similarity
 	}  
 }
 diag(comp_p)=1
+diag(phen_p)=1
 
 motifn=0
 motifntot=0
@@ -171,23 +174,34 @@ motifntot=motifntot+nrow(combis)
 
 ind$motifn=motifn
 ind$motifntot=motifntot
-ind$comp=mean(c(comp_p,comp_a))
+ind$comp=ifelse(tr=="morpho",mean(c(comp_p,comp_a)),mean(c(comp_p*phen_p,comp_a*phen_a)))
 
 
-for(rho in c(0.01,0.05,0.2)){
-comp_a[,]=rho
-comp_p[,]=rho
+for(rho in c(0.01,0.05,0.2,0.4,0.6)){
+comp_a[,]=rho #mean(c(comp_p,comp_a))
+comp_p[,]=rho #mean(c(comp_p,comp_a))
 diag(comp_p)=1
 diag(comp_a)=1
+if(tr=="morpho"){
+comp_phen_a=comp_a
+}else{
 comp_phen_a=comp_a*phen_a
+}
 diag(comp_phen_a)=1
+if(tr=="morpho"){
+comp_phen_p=comp_p
+}else{
 comp_phen_p=comp_p*phen_p
+}
 diag(comp_phen_p)=1
 
-A=rbind(cbind(competition*comp_p,-1*m),cbind(-1*t(m),competition*comp_a))
-ind$feas=Omega(A)
+A=rbind(cbind(competition*comp_phen_p,-1*m),cbind(-1*t(m),competition*comp_phen_a))
+vec_stab=c()
+for(it in 1:5){vec_stab=c(vec_stab,Omega(A))}
+ind$feas=mean(vec_stab)
+ind$feas_se=sd(vec_stab)/sqrt(5)
 ind$competition=competition
-ind$rho=rho
+ind$rho=rho #mean(c(comp_p,comp_a)) 
 indf=rbind(indf,ind)
 }
 
@@ -195,6 +209,7 @@ indf=rbind(indf,ind)
 }
 }
 }
+
 
 fwrite(indf,paste0("/home/duchenne/pheno/aggreg_simues/networks_info_",ess,".csv"))
 

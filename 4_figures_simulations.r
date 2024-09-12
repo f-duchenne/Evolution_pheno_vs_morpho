@@ -67,9 +67,10 @@ names(indf)[3]="inter. evenness"
 names(indf)[5]="wNODF"
 
 indf$prop_motif=(indf$motifn/indf$motifntot)
-model=glmmTMB::glmmTMB(feas~(prop_motif+rich)*trait+(1|essai),family=beta_family(link="logit"),data=subset(indf,competition==10 & rho==0.2 & time==2000))
+library(glmmTMB)
+model=glmmTMB(feas~(prop_motif+rich)*trait+(1|essai),family=beta_family(link="logit"),data=subset(indf,competition==10 & rho==0.2 & time==2000 & competition_feas==competition))
 
-indf2=subset(indf,competition==10 & rho==0.01)
+indf2=subset(indf,competition==10 & rho==0.01 & competition_feas==competition)
 acp=PCA(indf2[,1:6],graph=FALSE)
 indf2=cbind(indf2,acp$ind$coord)
 
@@ -133,7 +134,7 @@ grid.arrange(top,bottom,ncol=1)
 dev.off();
 
 #################### FIG. S3
-indf3=subset(indf,competition==5 & rho==0.01)
+indf3=subset(indf,competition==5 & rho==0.01 & competition_feas==competition)
 indf3=cbind(indf3,predict(acp,newdata=indf3[,1:6])$coord)
 
 pl3=ggplot()+
@@ -170,8 +171,14 @@ bottom
 dev.off();
 
 #########################################
+ggplot(data=subset(indf,competition==10 & rho==0.6 & trait!="pheno"),aes(x=time,y=feas,color=trait,group=paste(time,trait)))+geom_violin(position=position_dodge(width=0.5),width=8,scale="width",show.legend=FALSE)+
+geom_boxplot(width=3,position=position_dodge(width=0.5))+
+theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.background = element_blank(),
+strip.background=element_rect(fill=NA,color=NA),panel.border=element_blank())+
+scale_color_manual(values=colo)+scale_fill_manual(values=colo)+
+labs(linetype=expression(paste(n[sp]," / guild")))+ylab(expression(paste("Structural stability  ",(omega))))+xlab("Time")+facet_grid(cols=vars(rich),rows=vars(competition_feas), labeller = label_bquote(cols=n[sp] == .(rich)))+scale_x_sqrt(breaks=c(0,2000))
 
-indf4=subset(indf,competition==10)
+indf4=subset(indf,competition==10 & competition_feas==competition)
 
 pl6=ggplot(data=subset(indf4,rho==0.05),aes(x=time,y=feas,color=trait,group=paste(time,trait)))+geom_violin(position=position_dodge(width=0.5),width=8,scale="width",show.legend=FALSE)+
 geom_boxplot(width=3,position=position_dodge(width=0.5))+
@@ -198,7 +205,7 @@ pl6b
 dev.off();
 
 ############################## FIGURE S5
-indf4=subset(indf,competition==5)
+indf4=subset(indf,competition==5 & competition_feas==competition)
 
 pl6=ggplot(data=subset(indf4,rho==0.05),aes(x=time,y=feas,color=trait,group=paste(time,trait)))+geom_violin(position=position_dodge(width=0.5),width=8,scale="width",show.legend=FALSE)+
 geom_boxplot(width=3,position=position_dodge(width=0.5))+
