@@ -1,50 +1,3 @@
-###########################################
-###########################################
-#' Check for packages and if necessary install into library 
-#+ message = FALSE
-rm(list=ls())
-pkgs <- c("data.table", "dplyr","R2jags","ggplot2","bipartite","FactoMineR","factoextra","gridExtra","cowplot","ggpubr","scales") 
-
-inst <- pkgs %in% installed.packages()
-if (any(inst)) install.packages(pkgs[!inst])
-pkg.out <- lapply(pkgs, require, character.only = TRUE)
-
-setwd(dir="C:/Users/Duchenne/Documents/evolution_pheno_morpho/scripts/functions and secondary scripts")
-
-source("toolbox.R")
-
-invlogit=function(x){return(1+49*exp(x)/(1+exp(x)))}
-invlogit1=function(x){return(80+205*exp(x)/(1+exp(x)))}
-
-datf=NULL
-for(competition in c(5,10)){
-for (rich in c(10,20,30)){
-for(i in 1:100){
-dat=fread(paste0("C:/Users/Duchenne/Documents/evolution_pheno_morpho/results/ueq_",i,"_",rich,"_",competition,".csv"))
-dive=rich*2
-names(dat)[1:(dive)]=gsub("x","mu_",names(dat)[1:(dive)])
-names(dat)[(dive+1):(dive*2)]=gsub("x","sd_",names(dat)[(dive+1):(dive*2)])
-names(dat)[(dive*2+1)]="time"
-
-dat2=melt(dat,id.vars=c("trait","time"))
-dat2$type="mu"
-dat2$type[grep("sd",dat2$variable)]="sd"
-dat2$species=gsub("mu_","",dat2$variable)
-dat2$species=as.numeric(gsub("sd_","",dat2$species))
-dat2$species[dat2$species>dive]=dat2$species[dat2$species>dive]-dive
-dat2$comp=competition
-dat2$essai=i
-dat2$rich=rich
-datf=rbind(datf,dat2)
-}
-}
-}
-
-setwd(dir="C:/Users/Duchenne/Documents/evolution_pheno_morpho/")
-fwrite(datf,"species_level_data.csv")
-
-########################################### TO ran on HPC
-###########################################
 #' Check for packages and if necessary install into library 
 #+ message = FALSE
 pkgs <- c("data.table", "dplyr","bipartite") 
@@ -69,6 +22,7 @@ print(ess)
 datf=fread("/home/duchenne/pheno/species_level_data.csv")
 
 
+ncalc=10
 indf=NULL
 motifs=NULL
 
@@ -174,9 +128,46 @@ motifntot=motifntot+nrow(combis)
 
 ind$motifn=motifn
 ind$motifntot=motifntot
-ind$comp=ifelse(tr=="morpho",mean(c(comp_p,comp_a)),mean(c(comp_p*phen_p,comp_a*phen_a)))
 
 
+ind$competition=competition
+
+
+######################### CALCULATE FEASIBILITY WITH STRCUTRED COMPETITION NETWORKS
+if(tr=="morpho"){
+comp_phen_a=comp_a
+}else{
+comp_phen_a=comp_a*phen_a
+}
+diag(comp_phen_a)=1
+if(tr=="morpho"){
+comp_phen_p=comp_p
+}else{
+comp_phen_p=comp_p*phen_p
+}
+diag(comp_phen_p)=1
+A=rbind(cbind(-1*competition*comp_phen_p,m),cbind(t(m),-1*competition*comp_phen_a))
+vec_stab=c()
+for(it in 1:ncalc){vec_stab=c(vec_stab,Omega(A))}
+ind$feas_structure=mean(vec_stab)
+ind$feas_structure_se=sd(vec_stab)/sqrt(ncalc)
+
+######################### CALCULATE FEASIBILITY WITH MEAN FIELD BUT MEAN VALUES FROM AVERAGE COMPETITION STRENGTH IN SIMULATIONS
+ind$comp_a=mean(comp_phen_a[col(comp_phen_a)!=row(comp_phen_a)])
+ind$comp_p=mean(comp_phen_p[col(comp_phen_p)!=row(comp_phen_p)])
+
+comp_phen_a[,]=mean(comp_phen_a[col(comp_phen_a)!=row(comp_phen_a)])
+comp_phen_p[,]=mean(comp_phen_p[col(comp_phen_p)!=row(comp_phen_p)])
+diag(comp_phen_a)=1
+diag(comp_phen_p)=1
+A=rbind(cbind(-1*competition*comp_phen_p,m),cbind(t(m),-1*competition*comp_phen_a))
+vec_stab=c()
+for(it in 1:ncalc){vec_stab=c(vec_stab,Omega(A))}
+ind$feas_comp=mean(vec_stab)
+ind$feas_comp_se=sd(vec_stab)/sqrt(ncalc)
+
+######################### CALCULATE FEASIBILITY WITH FEW DIFFERENT MEAN FIELDS
+for(competition_feas in c(0.1,1,5,10)){
 for(rho in c(0.01,0.05,0.2,0.4,0.6)){
 comp_a[,]=rho #mean(c(comp_p,comp_a))
 comp_p[,]=rho #mean(c(comp_p,comp_a))
@@ -195,23 +186,23 @@ comp_phen_p=comp_p*phen_p
 }
 diag(comp_phen_p)=1
 
-A=rbind(cbind(competition*comp_phen_p,-1*m),cbind(-1*t(m),competition*comp_phen_a))
+A=rbind(cbind(-1*competition_feas*comp_phen_p,m),cbind(t(m),-1*competition_feas*comp_phen_a))
 vec_stab=c()
-for(it in 1:5){vec_stab=c(vec_stab,Omega(A))}
+for(it in 1:ncalc){vec_stab=c(vec_stab,Omega(A))}
 ind$feas=mean(vec_stab)
-ind$feas_se=sd(vec_stab)/sqrt(5)
-ind$competition=competition
+ind$feas_se=sd(vec_stab)/sqrt(ncalc)
+ind$competition_feas=competition_feas
 ind$rho=rho #mean(c(comp_p,comp_a)) 
 indf=rbind(indf,ind)
-}
+}}
 
 }
 }
 }
 }
-
 
 fwrite(indf,paste0("/home/duchenne/pheno/aggreg_simues/networks_info_",ess,".csv"))
+#
 
 #################### AGGREGATE NETWORKS INFORMATION IN A UNIQUE TABLE
 #' Check for packages and if necessary install into library 

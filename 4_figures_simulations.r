@@ -171,12 +171,12 @@ bottom
 dev.off();
 
 #########################################
-ggplot(data=subset(indf,competition==10 & rho==0.6 & trait!="pheno"),aes(x=time,y=feas,color=trait,group=paste(time,trait)))+geom_violin(position=position_dodge(width=0.5),width=8,scale="width",show.legend=FALSE)+
+ggplot(data=subset(indf,competition_feas==10 & rho==0.05),aes(x=time,y=feas_comp,color=trait,group=paste(time,trait)))+geom_violin(position=position_dodge(width=0.5),width=8,scale="width",show.legend=FALSE)+
 geom_boxplot(width=3,position=position_dodge(width=0.5))+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.background = element_blank(),
 strip.background=element_rect(fill=NA,color=NA),panel.border=element_blank())+
 scale_color_manual(values=colo)+scale_fill_manual(values=colo)+
-labs(linetype=expression(paste(n[sp]," / guild")))+ylab(expression(paste("Structural stability  ",(omega))))+xlab("Time")+facet_grid(cols=vars(rich),rows=vars(competition_feas), labeller = label_bquote(cols=n[sp] == .(rich)))+scale_x_sqrt(breaks=c(0,2000))
+labs(linetype=expression(paste(n[sp]," / guild")))+ylab(expression(paste("Structural stability  ",(omega))))+xlab("Time")+facet_grid(cols=vars(rich),rows=vars(competition), labeller = label_bquote(cols=n[sp] == .(rich)))+scale_x_sqrt(breaks=c(0,2000))
 
 indf4=subset(indf,competition==10 & competition_feas==competition)
 

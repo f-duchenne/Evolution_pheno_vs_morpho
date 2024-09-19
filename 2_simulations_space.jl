@@ -14,17 +14,23 @@ using QuadGK
 
 const jj=ARGS[1]
 println("essai",jj)
+jj=1
 
 include("C:/Users/Duchenne/Documents/evolution_pheno_morpho/scripts/functions and secondary scripts/derivatives_function_m_pheno_or_morpho_discrete.jl")
 const alpha=1
 const r=-0.5
-const epsilon=0.001
+epsilon=0.01
+tf=2000
+df = DataFrame(CSV.File(join(["C:/Users/Duchenne/Documents/evolution_pheno_morpho/initial/pops_ini_",jj,".csv"])))
 
+dive=10
+competition=5
+pini= alpha,r,epsilon,df,dive,competition,tf
 function simue(pini)
     alpha,r,epsilon,df,dive,competition,tf = pini
     nbsp_a=dive
     nbsp_p=dive
-    traits=["morpho";"pheno"]
+    traits=["morpho";]
     uinit=[ones(Float64,nbsp_a+nbsp_p);df.mu_phen[1:dive*2];df.sd_phen[1:dive*2];]
     final=missing
     for trait in traits
@@ -45,7 +51,7 @@ end
 for competition in [5;10;]
   for dive in [10;20;30;]
       println("essai",jj)
-      tf=2000
+      tf=200
       df = DataFrame(CSV.File(join(["C:/Users/Duchenne/Documents/evolution_pheno_morpho/initial/pops_ini_",jj,".csv"])))
       pini= alpha,r,epsilon,df,dive,competition,tf
       finalf=simue(pini)
