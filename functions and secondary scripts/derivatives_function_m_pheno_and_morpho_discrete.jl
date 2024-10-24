@@ -5,30 +5,33 @@
     u=copy(uinit)
     preci=0.000001
     max_gen_var=5
+    
+    function invlogit(x)
+        if x>=30.0
+            return(50.0)
+        end
+
+        if x<=(-30.0)
+            return(1.0)
+        end
+
+        if abs(x)<30.0
+            return(1.0+49.0*exp(x)/(1.0+exp(x)))
+        end
+    end
+
+    function invlogit1(x)
+        return(80.0+205.0*exp(x)/(1.0+exp(x)))
+
+    end
+
+    function inte(theta,m1,s1,m2,s2)
+        n1= pdf.(Normal.(m1,s1),theta)
+        n2= pdf.(Normal.(m2,s2),theta)
+        return(min.(n1,n2))
+    end
+
     for ti in 1:t
-        function invlogit(x)
-            if x>=30.0
-                return(50.0)
-            end
-
-            if x<=(-30.0)
-                return(1.0)
-            end
-
-            if abs(x)<30.0
-                return(1.0+49.0*exp(x)/(1.0+exp(x)))
-            end
-        end
-
-        function invlogit1(x)
-            return(80.0+205.0*exp(x)/(1.0+exp(x)))
-
-        end
-        function inte(theta,m1,s1,m2,s2)
-            n1= pdf.(Normal.(m1,s1),theta)
-            n2= pdf.(Normal.(m2,s2),theta)
-            return(min.(n1,n2))
-        end
         
         #Defining some shorcuts
         #pheno
