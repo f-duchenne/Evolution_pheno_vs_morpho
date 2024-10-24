@@ -24,6 +24,12 @@
             return(80.0+205.0*exp(x)/(1.0+exp(x)))
 
         end
+
+        function inte(theta,m1,s1,m2,s2)
+            n1= pdf.(Normal.(m1,s1),theta)
+            n2= pdf.(Normal.(m2,s2),theta)
+            return(min.(n1,n2))
+        end
         
         #Defining some shorcuts
         #pheno
@@ -45,12 +51,7 @@
                 for v in 1:nbsp_p
                     mu2= @view mu_phen_p[v]
                     sd2 = @view sd_phen_p[v]
-                    function inte(theta)
-                        phen1= pdf.(Normal.(mu1,sd1),theta)
-                        phen2= pdf.(Normal.(mu2,sd2),theta)
-                        return(min.(phen1,phen2))
-                    end
-                    phen=quadgk(inte, 0, 365, rtol=1e-6)[1]
+                    phen=quadgk(theta -> inte.(theta,mu1,sd1,mu2,sd2), 0, 365, rtol=1e-6)[1]
                     m[v,j]=phen
                 end  
             end
@@ -70,14 +71,9 @@
                     mu_phen_a,sd_phen_a,mu_phen_p,sd_phen_p,nbsp_p,nbsp_a,m = p2b
                     mut_interactions = Vector{}(undef, nbsp_p)
                     for v in 1:nbsp_p
-                        mu1= @view mu_phen_p[v]
-                        sd1= @view sd_phen_p[v]
-                        function inte(theta)
-                            phen1= pdf.(Normal.(invlogit1.(x),invlogit.(y)),theta)
-                            phen2= pdf.(Normal.(mu1,sd1),theta)
-                            return(min.(phen1,phen2))
-                        end
-                        phen=quadgk(inte, 0, 365, rtol=1e-6)[1]
+                        mu2= @view mu_phen_p[v]
+                        sd2= @view sd_phen_p[v]
+                        phen=quadgk(theta -> inte.(theta,invlogit1.(x),invlogit.(y),mu2,sd2), 0, 365, rtol=1e-6)[1]
                         mut_interactions[v] = phen
                     end
                     return(mut_interactions)
@@ -90,14 +86,9 @@
                     comp_interactions = Vector{}(undef, nbsp_a)
                     for v in 1:nbsp_a
                         if trait=="pheno"
-                            mu1= @view mu_phen_a[v]
-                            sd1= @view sd_phen_a[v]
-                            function inte(theta)
-                                phen1= pdf.(Normal.(invlogit1.(x),invlogit.(y)),theta)
-                                phen2= pdf.(Normal.(mu1,sd1),theta)
-                                return(min.(phen1,phen2))
-                            end
-                            phen=quadgk(inte, 0, 365, rtol=1e-6)[1]
+                            mu2= @view mu_phen_a[v]
+                            sd2= @view sd_phen_a[v]
+                            phen=quadgk(theta -> inte.(theta,invlogit1.(x),invlogit.(y),mu2,sd2), 0, 365, rtol=1e-6)[1]
                         else
                             phen=1.0
                         end
@@ -112,8 +103,6 @@
                 d_pop= r .+ alpha*sum(mut_interactions .* abund_flower) .- competition*sum(comp_interactions .* abund_poll)
                 return d_pop
             end
-            ∂f_∂x_a(x, y) = @inbounds ForwardDiff.derivative(x -> pop_derivative_a(x,y),x)
-            ∂f_∂y_a(x, y) = @inbounds ForwardDiff.derivative(y -> pop_derivative_a(x,y),y)
 
             @inbounds function pop_derivative_p(x,y)
                 #functions for derivation
@@ -122,14 +111,9 @@
                     mu_phen_a,sd_phen_a,mu_phen_p,sd_phen_p,nbsp_p,nbsp_a,m = p2
                     mut_interactions = Vector{}(undef, nbsp_a)
                     for v in 1:nbsp_a
-                        mu1= @view mu_phen_a[v]
-                        sd1= @view sd_phen_a[v]
-                        function inte(theta)
-                            phen1= pdf.(Normal.(invlogit1.(x),invlogit.(y)),theta)
-                            phen2= pdf.(Normal.(mu1,sd1),theta)
-                            return(min.(phen1,phen2))
-                        end
-                        phen=quadgk(inte, 0, 365, rtol=1e-6)[1]
+                        mu2= @view mu_phen_a[v]
+                        sd2= @view sd_phen_a[v]
+                        phen=quadgk(theta -> inte.(theta,invlogit1.(x),invlogit.(y),mu2,sd2), 0, 365, rtol=1e-6)[1]
                         mut_interactions[v] = phen
                     end
                     return(mut_interactions)
@@ -142,14 +126,9 @@
                     comp_interactions = Vector{}(undef, nbsp_p)
                     for v in 1:nbsp_p
                         if trait=="pheno"
-                            mu1= @view mu_phen_p[v]
-                            sd1= @view sd_phen_p[v]
-                            function inte(theta)
-                                phen1= pdf.(Normal.(invlogit1.(x),invlogit.(y)),theta)
-                                phen2= pdf.(Normal.(mu1,sd1),theta)
-                                return(min.(phen1,phen2))
-                            end
-                            phen=quadgk(inte, 0, 365, rtol=1e-6)[1]
+                            mu2= @view mu_phen_p[v]
+                            sd2= @view sd_phen_p[v]
+                            phen=quadgk(theta -> inte.(theta,invlogit1.(x),invlogit.(y),mu2,sd2), 0, 365, rtol=1e-6)[1]
                         else
                             phen=1.0
                         end
@@ -164,69 +143,42 @@
                 d_pop= r .+ alpha*sum(mut_interactions .* abund_poll) .- competition*sum(comp_interactions .* abund_flower)
                 return d_pop
             end
-            ∂f_∂x_p(x, y) = @inbounds ForwardDiff.derivative(x -> pop_derivative_p(x,y),x)
-            ∂f_∂y_p(x, y) = @inbounds ForwardDiff.derivative(y -> pop_derivative_p(x,y),y)
 
             ###################################################################################################
 
             if i< nbsp_a+1 #if pollinator
-                ### EVOLUTION
-                ### PARTIAL DERIVATIVES FOR EVOLUTION
-                fit=pop_derivative_a(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)])
-                vec=[pop_derivative_a(u[(i+nbsp_a+nbsp_p)]+preci,u[(i+nbsp_a*2+nbsp_p*2)]);pop_derivative_a(u[(i+nbsp_a+nbsp_p)]-preci,u[(i+nbsp_a*2+nbsp_p*2)])]
-                if(maximum(vec)<=fit)
-                    partial_dev_mu_phen =0
-                else
-                    partial_dev_mu_phen = vec[1].-vec[2] #@inbounds ∂f_∂x_p(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)])
-                    partial_dev_mu_phen = (1/preci)*partial_dev_mu_phen
-                    if abs(partial_dev_mu_phen)>max_gen_var
-                        partial_dev_mu_phen = sign(partial_dev_mu_phen)*max_gen_var
-                    end
-                end
-                u[(nbsp_a+nbsp_p+i)]=u[(nbsp_a+nbsp_p+i)]+(sqrt(af .+ 1) .* epsilon .* partial_dev_mu_phen)
-
-                fit=pop_derivative_a(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)])
-                vec=[pop_derivative_a(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)]+preci);pop_derivative_a(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)]-preci)]
-                if(maximum(vec)<=fit)
-                    partial_dev_sd_phen =0
-                else
-                    partial_dev_sd_phen = vec[1].-vec[2]#@inbounds ∂f_∂y_p(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)])
-                    partial_dev_sd_phen = (1/preci)*partial_dev_sd_phen
-                    if abs(partial_dev_sd_phen)>max_gen_var
-                        partial_dev_sd_phen = sign(partial_dev_sd_phen)*max_gen_var
-                    end
-                end
-                u[(nbsp_a*2+nbsp_p*2+i)]=u[(nbsp_a*2+nbsp_p*2+i)]+(sqrt(af .+ 1) .* epsilon .* partial_dev_sd_phen)
-
+                funcdev=pop_derivative_a
             else#if plant
-                #### EVOLUTION                
-                ### PARTIAL DERIVATIVES FOR EVOLUTION
-                fit=pop_derivative_p(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)])
-                vec=[pop_derivative_p(u[(i+nbsp_a+nbsp_p)]+preci,u[(i+nbsp_a*2+nbsp_p*2)]);pop_derivative_p(u[(i+nbsp_a+nbsp_p)]-preci,u[(i+nbsp_a*2+nbsp_p*2)])]
-                if(maximum(vec)<=fit)
-                    partial_dev_mu_phen =0
-                else
-                    partial_dev_mu_phen = vec[1].-vec[2] #@inbounds ∂f_∂x_p(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)])
-                    partial_dev_mu_phen = (1/preci)*partial_dev_mu_phen
-                    if abs(partial_dev_mu_phen)>max_gen_var
-                        partial_dev_mu_phen = sign(partial_dev_mu_phen)*max_gen_var
-                    end
-                end
-                u[(nbsp_a+nbsp_p+i)]=u[(nbsp_a+nbsp_p+i)]+(sqrt(af .+ 1) .* epsilon .* partial_dev_mu_phen)
-
-                fit=pop_derivative_p(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)])
-                vec=[pop_derivative_p(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)]+preci);pop_derivative_p(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)]-preci)]
-                if(maximum(vec)<=fit)
-                    partial_dev_sd_phen =0
-                else
-                    partial_dev_sd_phen = vec[1].-vec[2]#@inbounds ∂f_∂y_p(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)])
-                    partial_dev_sd_phen = (1/preci)*partial_dev_sd_phen
-                    if abs(partial_dev_sd_phen)>max_gen_var
-                        partial_dev_sd_phen = sign(partial_dev_sd_phen)*max_gen_var
-                    end
-                end
-                u[(nbsp_a*2+nbsp_p*2+i)]=u[(nbsp_a*2+nbsp_p*2+i)]+(sqrt(af .+ 1) .* epsilon .* partial_dev_sd_phen)
+                funcdev=pop_derivative_p
             end
+            ### EVOLUTION
+            ### PARTIAL DERIVATIVES FOR EVOLUTION
+            fit=funcdev(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)])
+            vec=[funcdev(u[(i+nbsp_a+nbsp_p)]+preci,u[(i+nbsp_a*2+nbsp_p*2)]);funcdev(u[(i+nbsp_a+nbsp_p)]-preci,u[(i+nbsp_a*2+nbsp_p*2)])]
+            if(maximum(vec)<=fit)
+                partial_dev_mu_phen =0
+            else
+                partial_dev_mu_phen = vec[1].-vec[2] #@inbounds ∂f_∂x_p(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)])
+                partial_dev_mu_phen = (1/preci)*partial_dev_mu_phen
+                if abs(partial_dev_mu_phen)>max_gen_var
+                    partial_dev_mu_phen = sign(partial_dev_mu_phen)*max_gen_var
+                end
+            end
+            u[(nbsp_a+nbsp_p+i)]=u[(nbsp_a+nbsp_p+i)]+(sqrt(af .+ 1) .* epsilon .* partial_dev_mu_phen)
+
+            fit=funcdev(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)])
+            vec=[funcdev(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)]+preci);funcdev(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)]-preci)]
+            if(maximum(vec)<=fit)
+                partial_dev_sd_phen =0
+            else
+                partial_dev_sd_phen = vec[1].-vec[2]#@inbounds ∂f_∂y_p(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)])
+                partial_dev_sd_phen = (1/preci)*partial_dev_sd_phen
+                if abs(partial_dev_sd_phen)>max_gen_var
+                    partial_dev_sd_phen = sign(partial_dev_sd_phen)*max_gen_var
+                end
+            end
+            u[(nbsp_a*2+nbsp_p*2+i)]=u[(nbsp_a*2+nbsp_p*2+i)]+(sqrt(af .+ 1) .* epsilon .* partial_dev_sd_phen)
+
         end
         result[(ti+1),:]=[u;ti;]
     end
