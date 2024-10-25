@@ -3,8 +3,6 @@
     result = Array{Float64}(undef, t+1, length(uinit)+1)
     result[1,:]=[uinit;0;]
     u=copy(uinit)
-    preci=0.000001
-    max_gen_var=5
     
     function invlogit(x)
         if x>=30.0
@@ -32,7 +30,7 @@
     end
 
     for ti in 1:t
-        
+        u2=copy(u)
         #Defining some shorcuts
         #pheno
         mu_phen_a = invlogit1.(u[(1+nbsp_a+nbsp_p):(nbsp_a*2+nbsp_p)])
@@ -95,7 +93,7 @@
                             phen=1.0
                         end
                         competitor= @view m[:,v]
-                        similarity=sum(mut_interactions .* competitor) / (sum(mut_interactions))
+                        similarity=mean(sqrt.(mut_interactions .* competitor))
                         comp_interactions[v]=phen.*similarity
                     end
                     return(comp_interactions)
@@ -135,7 +133,7 @@
                             phen=1.0
                         end
                         competitor = @view m[v,:]
-                        similarity=sum(mut_interactions .* competitor) / (sum(mut_interactions))
+                        similarity=mean(sqrt.(mut_interactions .* competitor))
                         comp_interactions[v]=phen.*similarity
                     end
                     return(comp_interactions)
@@ -156,32 +154,33 @@
             ### EVOLUTION
             ### PARTIAL DERIVATIVES FOR EVOLUTION
             fit=funcdev(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)])
-            vec=[funcdev(u[(i+nbsp_a+nbsp_p)]+preci,u[(i+nbsp_a*2+nbsp_p*2)]);funcdev(u[(i+nbsp_a+nbsp_p)]-preci,u[(i+nbsp_a*2+nbsp_p*2)])]
-            if(maximum(vec)<=fit)
+            fitval=[funcdev(u[(i+nbsp_a+nbsp_p)]+epsilon,u[(i+nbsp_a*2+nbsp_p*2)]);funcdev(u[(i+nbsp_a+nbsp_p)]-epsilon,u[(i+nbsp_a*2+nbsp_p*2)])]
+            if(maximum(fitval)<=fit)
                 partial_dev_mu_phen =0
             else
-                partial_dev_mu_phen = vec[1].-vec[2] #@inbounds ∂f_∂x_p(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)])
-                partial_dev_mu_phen = (1/preci)*partial_dev_mu_phen
-                if abs(partial_dev_mu_phen)>max_gen_var
-                    partial_dev_mu_phen = sign(partial_dev_mu_phen)*max_gen_var
+                if fitval[1] .> fitval[2]
+                    partial_dev_mu_phen = epsilon
+                else
+                    partial_dev_mu_phen = -1 * epsilon
                 end
             end
-            u[(nbsp_a+nbsp_p+i)]=u[(nbsp_a+nbsp_p+i)]+(sqrt(af .+ 1) .* epsilon .* partial_dev_mu_phen)
+            u2[(nbsp_a+nbsp_p+i)]=u[(nbsp_a+nbsp_p+i)] + partial_dev_mu_phen
 
             fit=funcdev(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)])
-            vec=[funcdev(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)]+preci);funcdev(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)]-preci)]
-            if(maximum(vec)<=fit)
+            fitval=[funcdev(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)]+epsilon);funcdev(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)]-epsilon)]
+            if(maximum(fitval)<=fit)
                 partial_dev_sd_phen =0
             else
-                partial_dev_sd_phen = vec[1].-vec[2]#@inbounds ∂f_∂y_p(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)])
-                partial_dev_sd_phen = (1/preci)*partial_dev_sd_phen
-                if abs(partial_dev_sd_phen)>max_gen_var
-                    partial_dev_sd_phen = sign(partial_dev_sd_phen)*max_gen_var
+                if fitval[1] .> fitval[2]
+                    partial_dev_sd_phen = epsilon
+                else
+                    partial_dev_sd_phen = -1 * epsilon
                 end
             end
-            u[(nbsp_a*2+nbsp_p*2+i)]=u[(nbsp_a*2+nbsp_p*2+i)]+(sqrt(af .+ 1) .* epsilon .* partial_dev_sd_phen)
+            u2[(nbsp_a*2+nbsp_p*2+i)]=u[(nbsp_a*2+nbsp_p*2+i)] + partial_dev_sd_phen
 
         end
+        u=copy(u2)
         result[(ti+1),:]=[u;ti;]
     end
     return result[1:10:end,1:end]
