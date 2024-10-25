@@ -1,3 +1,50 @@
+###########################################
+###########################################
+#' Check for packages and if necessary install into library 
+#+ message = FALSE
+rm(list=ls())
+pkgs <- c("data.table", "dplyr","R2jags","ggplot2","bipartite","FactoMineR","factoextra","gridExtra","cowplot","ggpubr","scales") 
+
+inst <- pkgs %in% installed.packages()
+if (any(inst)) install.packages(pkgs[!inst])
+pkg.out <- lapply(pkgs, require, character.only = TRUE)
+
+setwd(dir="C:/Users/Duchenne/Documents/evolution_pheno_morpho/scripts/functions and secondary scripts")
+
+source("toolbox.R")
+
+invlogit=function(x){return(1+49*exp(x)/(1+exp(x)))}
+invlogit1=function(x){return(80+205*exp(x)/(1+exp(x)))}
+
+datf=NULL
+for(competition in c(2,5)){
+for (rich in c(10,20,30)){
+for(i in 1:100){
+dat=fread(paste0("C:/Users/Duchenne/Documents/evolution_pheno_morpho/results/ueq_",i,"_",rich,"_",competition,".csv"))
+dive=rich*2
+names(dat)[1:(dive)]=gsub("x","mu_",names(dat)[1:(dive)])
+names(dat)[(dive+1):(dive*2)]=gsub("x","sd_",names(dat)[(dive+1):(dive*2)])
+names(dat)[(dive*2+1)]="time"
+
+dat2=melt(dat,id.vars=c("trait","time"))
+dat2$type="mu"
+dat2$type[grep("sd",dat2$variable)]="sd"
+dat2$species=gsub("mu_","",dat2$variable)
+dat2$species=as.numeric(gsub("sd_","",dat2$species))
+dat2$species[dat2$species>dive]=dat2$species[dat2$species>dive]-dive
+dat2$comp=competition
+dat2$essai=i
+dat2$rich=rich
+datf=rbind(datf,dat2)
+}
+}
+}
+
+setwd(dir="C:/Users/Duchenne/Documents/evolution_pheno_morpho/")
+fwrite(datf,"species_level_data.csv")
+
+########################################### TO ran on HPC
+###########################################
 #' Check for packages and if necessary install into library 
 #+ message = FALSE
 pkgs <- c("data.table", "dplyr","bipartite") 
