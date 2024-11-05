@@ -102,7 +102,7 @@
                         sd2= @view sd_phen_a[v]
                         phen=quadgk(theta -> inte.(theta,invlogit1.(x),invlogit.(y),mu2,sd2), 0, 365, rtol=1e-6)[1]
                         competitor= @view m[:,v]
-                        similarity=mean(sqrt.(mut_interactions .* competitor))
+                        similarity=sum(mut_interactions .* competitor)/sum(mut_interactions)
                         comp_interactions[v]=phen.*similarity
                     end
                     return(comp_interactions)
@@ -141,7 +141,7 @@
                         sd2= @view sd_phen_p[v]
                         phen=quadgk(theta -> inte.(theta,invlogit1.(x),invlogit.(y),mu2,sd2), 0, 365, rtol=1e-6)[1]
                         competitor= @view m[v,:]
-                        similarity=mean(sqrt.(mut_interactions .* competitor))
+                        similarity=sum(mut_interactions .* competitor)/sum(mut_interactions)
                         comp_interactions[v]=phen.*similarity
                     end
                     return(comp_interactions)

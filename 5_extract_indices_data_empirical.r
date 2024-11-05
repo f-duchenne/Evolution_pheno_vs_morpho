@@ -25,12 +25,13 @@ empf=NULL
 for (site in sites){
 m=networks[[site]]
 
-mbi=round(m,digits=5)
+mbi=round(m,digits=3)
 
 emp=networklevel(mbi,index=c("weighted connectance","weighted nestedness","interaction evenness","H2"))
 emp=as.data.frame(t(emp))
 emp$NODF=networklevel(round(mbi,digits=5),index=c("weighted NODF"))
 names(emp)=gsub("weighted ","",names(emp))
+emp$mut.strength=mean(m)
 emp$modularity=computeModules(mbi, method="Beckett")@"likelihood"
 emp$na=ncol(m)
 emp$np=nrow(m)
@@ -134,7 +135,7 @@ emp$motifn=motifn
 emp$motifntot=motifntot
 
 for(rho in c(0.01,0.05,0.2)){
-for(competition in c(0.1,1,5,10)){
+for(competition in c(0.1,1,2,5)){
 comp_a[,]=rho
 comp_p[,]=rho
 diag(comp_p)=1
@@ -144,8 +145,8 @@ diag(comp_phen_a)=1
 comp_phen_p=comp_p*phen_p
 diag(comp_phen_p)=1
 
-A1=rbind(cbind(competition*comp_phen_p,-1*m),cbind(-1*t(m),competition*comp_phen_a))
-A2=rbind(cbind(competition*comp_p,-1*m),cbind(-1*t(m),competition*comp_a))
+A1=rbind(cbind(-1*competition*comp_phen_p,m),cbind(t(m),-1*competition*comp_phen_a))
+A2=rbind(cbind(-1*competition*comp_p,m),cbind(t(m),-1*competition*comp_a))
 
 vec_stab1=c()
 vec_stab2=c()
@@ -183,23 +184,37 @@ invlogit1=function(x){return(80+205*exp(x)/(1+exp(x)))}
 
 liste = fread("C:/Users/Duchenne/Documents/evolution_pheno_morpho/initial_empir/liste.csv")
 
+competition=5
+
 datf=NULL
 for(ess in 1:10){
+for(tr in c("both","pheno")){
 for(jj in 1:nrow(liste)){
-dat=fread(paste0("C:/Users/Duchenne/Documents/evolution_pheno_morpho/results_empir/ueq_",liste$site[jj],"_",ess,".csv"))
+dat=fread(paste0("C:/Users/Duchenne/Documents/evolution_pheno_morpho/results_empir_symmetric/ueq_",liste$site[jj],"_",tr,"_",ess,".csv"))
 nbsp_a=liste$na[jj]
 nbsp_p=liste$np[jj]
 
-for(competition in c(10)){
-names(dat)[1:(nbsp_a+nbsp_p)]=gsub("x","mu_",names(dat)[1:(nbsp_a+nbsp_p)])
-names(dat)[(nbsp_a+nbsp_p+1):((nbsp_a+nbsp_p)*2)]=gsub("x","sd_",names(dat)[(nbsp_a+nbsp_p+1):((nbsp_a+nbsp_p)*2)])
-names(dat)[(nbsp_a+nbsp_p)*2+1]="time"
+dive=nbsp_a+nbsp_p
+
+if(tr=="both"){
+names(dat)[1:(dive)]=paste0("mu_",1:dive)
+names(dat)[(dive+1):(dive*2)]=paste0("sd_",1:dive)
+names(dat)[(dive*2+1):(dive*3)]=paste0("mu2_",1:dive)
+names(dat)[(dive*3+1):(dive*4)]=paste0("sd2_",1:dive)
+names(dat)[(dive*4+1)]="time"
+}else{
+names(dat)[1:(dive)]=paste0("mu_",1:dive)
+names(dat)[(dive+1):(dive*2)]=paste0("sd_",1:dive)
+names(dat)[(dive*2+1)]="time"
+}
 
 dat2=melt(dat,id.vars=c("trait","time"))
 dat2$type="mu"
+dat2$type[grep("mu2",dat2$variable)]="mu2"
 dat2$type[grep("sd",dat2$variable)]="sd"
-dat2$species=gsub("mu_","",dat2$variable)
-dat2$species=as.numeric(gsub("sd_","",dat2$species))
+dat2$type[grep("sd2",dat2$variable)]="sd2"
+dat2$species=gsub("mu2_","",gsub("mu_","",dat2$variable))
+dat2$species=as.numeric(gsub("sd2_","",gsub("sd_","",dat2$species)))
 dat2$species[dat2$species>(nbsp_a+nbsp_p)]=dat2$species[dat2$species>(nbsp_a+nbsp_p)]-(nbsp_a+nbsp_p)
 dat2$comp=competition
 dat2$essai=ess
@@ -209,7 +224,9 @@ datf=rbind(datf,dat2)
 }
 }
 setwd(dir="C:/Users/Duchenne/Documents/evolution_pheno_morpho/")
-fwrite(datf,"species_level_simues_empir.csv")
+fwrite(datf,"species_level_simues_empir_symmetric.csv")
+datf_alleg=datf[datf$time %in% c(0,2000),]
+fwrite(datf_alleg,"species_level_simues_empir_symmetric_alleg.csv")
 
 ########################################### TO ran on HPC
 ###########################################
@@ -222,7 +239,7 @@ if (any(inst)) install.packages(pkgs[!inst])
 pkg.out <- lapply(pkgs, require, character.only = TRUE)
 
 setwd(dir="/home/duchenne/pheno") #run on a cluster
-source("/home/duchenne/pheno/toolbox.R")  #run on a cluster
+source("toolbox.R")  #run on a cluster
 invlogit=function(x){return(1+49*exp(x)/(1+exp(x)))}
 invlogit1=function(x){return(80+205*exp(x)/(1+exp(x)))}
 
@@ -233,45 +250,56 @@ args_contents <- strsplit(args, ' ')
 jj <- as.numeric(args_contents[[1]])
 print(jj)
 
-
-datf = fread("species_level_simues_empir.csv")
-liste = fread("C:/Users/Duchenne/Documents/evolution_pheno_morpho/initial_empir/liste.csv")
-
+datf = fread("/home/duchenne/pheno/species_level_simues_empir_symmetric_alleg.csv")
+liste = fread("/home/duchenne/pheno/initial_empir/liste.csv")
+ncalc=10
 indf=NULL
+
+
 motifs=NULL
 for(ess in 1:10){
 nbsp_a=liste$na[jj]
 nbsp_p=liste$np[jj]
-for(competition in c(10)){
-for(tr in c("morpho","pheno")){
+for(competition in c(5)){
+for(tr in c("both","pheno")){
 for(ti in c(0,2000)){
 
 bidon=subset(datf,time==ti & trait==tr & essai==ess & site==liste$site[jj])
 
 #build interaction matrix:
+#build interaction matrix:
 m = matrix(NA, nbsp_p, nbsp_a)
 for(i in 1:nbsp_a){
 	mu1=invlogit1(subset(bidon,type=="mu" & species==i)$value)
 	sd1=invlogit(subset(bidon,type=="sd" & species==i)$value)
+	if(tr=="both"){
+		mu1_m=invlogit1(subset(bidon,type=="mu2" & species==i)$value)
+		sd1_m=invlogit(subset(bidon,type=="sd2" & species==i)$value)
+	}
 	for(j in 1:nbsp_p){
 		mu2=invlogit1(subset(bidon,type=="mu" & species==(j+nbsp_a))$value)
 		sd2=invlogit(subset(bidon,type=="sd" & species==(j+nbsp_a))$value)
+		if(tr=="both"){
+			mu2_m=invlogit1(subset(bidon,type=="mu2" & species==j+nbsp_a)$value)
+			sd2_m=invlogit(subset(bidon,type=="sd2" & species==j+nbsp_a)$value)
+		}
 		f=function(x){pmin(dnorm(x,mu1,sd1),dnorm(x,mu2,sd2))}
-		m[j,i]=sum(f(seq(0,365,0.1)))*0.1
+		if(tr=="both"){
+			f2=function(x){pmin(dnorm(x,mu1_m,sd1_m),dnorm(x,mu2_m,sd2_m))}
+			m[j,i]=(sum(f(seq(0,365,0.1)))*0.1)*(sum(f2(seq(0,365,0.1)))*0.1)
+		}else{
+			m[j,i]=sum(f(seq(0,365,0.1)))*0.1
+		}
 	}  
 }
 
-struf=NULL
-for(rr in c(0.05)){
-#mbi=apply(m, 1L:2L, function(p) rbinom(1, 5, p))
-#mbi[mbi>0]=1
-mbi=round(m,digits=5)
+
+mbi=round(m,digits=3)
 stru=networklevel(mbi,index=c("weighted connectance","weighted nestedness","interaction evenness","H2"),H2_integer=FALSE)
-stru=as.data.frame(t(stru))
-stru$NODF=networklevel(round(mbi,digits=5),index=c("weighted NODF"))
-stru$modularity=computeModules(mbi, method="Beckett")@"likelihood"
-struf=rbind(struf,stru)
-}
+struf=as.data.frame(t(stru))
+struf$NODF=networklevel(round(mbi,digits=5),index=c("weighted NODF"))
+struf$modularity=computeModules(mbi, method="Beckett")@"likelihood"
+struf$m_mean=mean(m)
 
 ind=as.data.frame(t(apply(struf,2,mean,na.rm=T)))
 ind$trait=tr
@@ -287,14 +315,16 @@ phen_a = matrix(NA, nbsp_a, nbsp_a)
 for(i in 1:nbsp_a){
 	mu1=invlogit1(subset(bidon,type=="mu" & species==i)$value)
 	sd1=invlogit(subset(bidon,type=="sd" & species==i)$value)
-	for(j in 1:nbsp_a){
-		similarity=sum(m[,i] * m[,j]) / sum(m[,i])
+	for(j in i:nbsp_a){
+		similarity=mean(sqrt(m[,i] * m[,j]))
 		mu2=invlogit1(subset(bidon,type=="mu" & species==j)$value)
 		sd2=invlogit(subset(bidon,type=="sd" & species==j)$value)
 		f=function(x){pmin(dnorm(x,mu1,sd1),dnorm(x,mu2,sd2))}
 		phen=sum(f(seq(0,365,0.1)))*0.1
 		phen_a[i,j]=phen
-		comp_a[i,j]=ifelse(tr=="pheno",phen*similarity,similarity)
+		phen_a[j,i]=phen
+		comp_a[i,j]=ifelse(tr %in% c("pheno","both"),phen*similarity,similarity)
+		comp_a[j,i]=ifelse(tr %in% c("pheno","both"),phen*similarity,similarity)
 	}  
 }
 diag(comp_a)=1
@@ -305,14 +335,16 @@ phen_p = matrix(NA, nbsp_p, nbsp_p)
 for(i in 1:nbsp_p){
 	mu1=invlogit1(subset(bidon,type=="mu" & species==(i+nbsp_a))$value)
 	sd1=invlogit(subset(bidon,type=="sd" & species==(i+nbsp_a))$value)
-	for(j in 1:(nbsp_p)){
-		similarity=sum(t(m)[,i] * t(m)[,j]) / sum(t(m)[,i])
+	for(j in i:(nbsp_p)){
+		similarity=mean(sqrt(t(m)[,i] * t(m)[,j]))
 		mu2=invlogit1(subset(bidon,type=="mu" & species==(j+nbsp_a))$value)
 		sd2=invlogit(subset(bidon,type=="sd" & species==(j+nbsp_a))$value)
 		f=function(x){pmin(dnorm(x,mu1,sd1),dnorm(x,mu2,sd2))}
 		phen=sum(f(seq(0,365,0.1)))*0.1
 		phen_p[i,j]=phen
-		comp_p[i,j]=ifelse(tr=="pheno",phen*similarity,similarity)
+		phen_p[j,i]=phen
+		comp_p[i,j]=ifelse(tr %in% c("pheno","both"),phen*similarity,similarity)
+		comp_p[j,i]=ifelse(tr %in% c("pheno","both"),phen*similarity,similarity)
 	}  
 }
 diag(comp_p)=1
@@ -347,7 +379,7 @@ ind$comp=mean(c(comp_p,comp_a))
 
 
 for(rho in c(0.01,0.05,0.2)){
-for(competition in c(0.01,1,5,10)){
+for(competition in c(0.01,1,2,5)){
 comp_a[,]=rho
 comp_p[,]=rho
 diag(comp_p)=1
@@ -357,17 +389,17 @@ diag(comp_phen_a)=1
 comp_phen_p=comp_p*phen_p
 diag(comp_phen_p)=1
 if(tr=="morpho"){
-A=rbind(cbind(competition*comp_p,-1*m),cbind(-1*t(m),competition*comp_a))
+A=rbind(cbind(-1*competition*comp_p,m),cbind(t(m),-1*competition*comp_a))
 }else{
-A=rbind(cbind(competition*comp_phen_p,-1*m),cbind(-1*t(m),competition*comp_phen_a))
+A=rbind(cbind(-1*competition*comp_phen_p,m),cbind(t(m),-1*competition*comp_phen_a))
 }
 
 vec_stab=c()
-for(it in 1:5){
+for(it in 1:ncalc){
 vec_stab=c(vec_stab,Omega(A))
 }
 ind$feas_with_pheno=mean(vec_stab)
-ind$feas_with_pheno_se=sd(vec_stab)/sqrt(5)
+ind$feas_with_pheno_se=sd(vec_stab)/sqrt(ncalc)
 ind$competition=competition
 ind$rho=rho
 indf=rbind(indf,ind)
@@ -379,5 +411,26 @@ indf=rbind(indf,ind)
 }
 }
 
-fwrite(indf,"C:/Users/Duchenne/Documents/evolution_pheno_morpho/networks_info_empir.csv")
+
+fwrite(indf,paste0("/home/duchenne/pheno/networks_info_empir_symmetric_",jj,".csv"))
 #
+
+#################################################
+#' Check for packages and if necessary install into library 
+#+ message = FALSE
+rm(list=ls())
+pkgs <- c("data.table", "dplyr","R2jags","ggplot2","bipartite","FactoMineR","factoextra","gridExtra","cowplot","ggpubr","scales") 
+
+inst <- pkgs %in% installed.packages()
+if (any(inst)) install.packages(pkgs[!inst])
+pkg.out <- lapply(pkgs, require, character.only = TRUE)
+
+indf=NULL
+for(jj in 1:17){
+ind=fread(paste0("C:/Users/Duchenne/Documents/evolution_pheno_morpho/aggreg_empir_symmetric/networks_info_empir_symmetric_",jj,".csv"))
+
+indf=rbind(indf,ind)
+}
+
+fwrite(indf,"networks_info_empir.csv")
+

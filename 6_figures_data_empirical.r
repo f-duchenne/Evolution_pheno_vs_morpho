@@ -11,10 +11,10 @@ pkg.out <- lapply(pkgs, require, character.only = TRUE)
 
 setwd(dir="C:/Users/Duchenne/Documents/evolution_pheno_morpho/")
 empf=fread("empirical_networks.csv")
-names(empf)=gsub("weighted ","",names(empf))
+names(empf)[1:2]=paste0("w",names(empf)[1:2])
 names(empf)[3]="inter. evenness"
 names(empf)[5]="wNODF"
-colo=c("dodgerblue4","chartreuse3")
+colo=c("chartreuse3","dodgerblue4","gold3")
 
 empf$dive=empf$na+empf$np 
 empf$prop_motif=(empf$motifn/empf$motifntot)
@@ -22,9 +22,10 @@ empf$prop_motif=(empf$motifn/empf$motifntot)
 
 setwd(dir="C:/Users/Duchenne/Documents/evolution_pheno_morpho")
 indf=fread("C:/Users/Duchenne/Documents/evolution_pheno_morpho/networks_info_empir.csv")
-names(indf)=gsub("weighted ","",names(indf))
+names(indf)=gsub("weighted ","w",names(indf))
 names(indf)[3]="inter. evenness"
 names(indf)[5]="wNODF"
+names(indf)[7]="mut.strength"
 
 indf$dive=indf$nbsp_a+indf$nbsp_p 
 indf$prop_motif=(indf$motifn/indf$motifntot)
@@ -55,49 +56,29 @@ labs(color="")
 pl2=fviz_pca_var(acp, col.var = "black", repel =TRUE)+ggtitle("b")+
 theme(plot.title=element_text(size=14,face="bold",hjust = 0))
 
-png("Fig.S6.png",width=1200,height=800,res=160)
+png("Fig.S5.png",width=1200,height=800,res=160)
 plot_grid(plot_acp,pl2,ncol=2,align="hv")
 dev.off();
 
 
-empf2=subset(empf,competition==5 & rho==0.01)
+empf2=subset(empf,competition==5 & rho==0.05 & trait=="both")
 pl1=ggplot()+
 geom_boxplot(data=empf2,aes(x="Empirical",y=motifn/motifntot))+
-geom_boxplot(data=subset(indf,time==2000 & rho==0.05),aes(y=motifn/motifntot,x="Simulations",color=trait))+
+geom_boxplot(data=subset(indf,rho==0.05 & time==2000),aes(y=motifn/motifntot,x="Simulated\nCoevolved"),color=colo[1])+
+geom_boxplot(data=subset(indf,rho==0.05 & time==0),aes(y=motifn/motifntot,x="Simulated\nInitial"),color="grey")+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.border=element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.position="none",
 axis.title.x=element_blank(),
 strip.background=element_rect(fill=NA,color=NA))+
-scale_color_manual(values=colo)+ggtitle("a")+
+ggtitle("a")+
 ylab('Percentage of "V+" motifs')+scale_y_continuous(labels=scales::percent)
 
 
-pl2=ggplot(data=empf,aes(x=feas_without_pheno,y=feas_with_pheno))+
-geom_point(aes(color=na+np),size=2)+
-geom_abline(intercept=0,slope=1)+
-theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),
-panel.border=element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
-strip.background=element_rect(fill=NA,color=NA),legend.position = c(0.75, 0.3))+
-scale_color_viridis(option="E")+ggtitle("b")+coord_fixed(ratio=1,expand=F)+ylim(c(0,0.5))+xlim(c(0,0.5))+
-ylab("Feasibility when including seasonal structure")+
-xlab("Feasibility when neglecting seasonal structure")+labs(color=expression(N[sp]))
-
-
-empf2=subset(empf,competition==1)
+empf2=subset(empf,competition==5)
 empf2$dive=empf2$na+empf2$np
 b=melt(empf2,id.vars=c("dive","rho"),measure.vars=c("feas_with_pheno","feas_without_pheno"))
 b$variable=as.character(b$variable)
 b$variable[b$variable=="feas_without_pheno"]="without seasonal structure"
 b$variable[b$variable=="feas_with_pheno"]="with seasonal structure"
-
-ggplot(data=b,aes(x=dive,y=value,color=variable,fill=variable))+
-geom_point(size=2,alpha=0.9)+
-stat_smooth(method="glm",alpha=0.2,,method.args = list(family = quasibinomial(link = 'logit')))+
-theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),
-panel.border=element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
-strip.background=element_rect(fill=NA,color=NA),legend.position = c(0.75, 0.9))+scale_fill_manual(values=c("black","grey"))+
-scale_color_manual(values=c("black","grey"))+ggtitle("b")+coord_cartesian()+
-ylab(expression(paste("Structural stability  ",(omega))))+
-xlab("Diversity")+labs(color="",fill="")+facet_wrap(~rho)
 
 pl2=ggplot(data=subset(b,rho==0.05),aes(x=dive,y=value,color=variable,fill=variable))+
 geom_point(size=2,alpha=0.9)+
@@ -110,7 +91,7 @@ ylab(expression(paste("Structural stability  ",(omega))))+
 xlab("Diversity")+labs(color="",fill="")
 
 
-pl3=ggplot(data=empf,aes(x=as.factor(competition),y=feas_without_pheno/feas_with_pheno-1,color=as.factor(rho)))+
+pl3=ggplot(data=subset(empf,competition %in% c(2,5)),aes(x=as.factor(competition),y=feas_without_pheno/feas_with_pheno-1,color=as.factor(rho)))+
 geom_hline(linetype="dashed",yintercept=0)+
 geom_hline(linetype="dashed",yintercept=-1)+
 geom_boxplot()+
@@ -126,7 +107,7 @@ plot_grid(pl1,pl2,pl3,ncol=3,align="hv",rel_widths=c(0.75,2,1.5))
 
 
 pdf("Fig.5.pdf",width=10,height=5)
-plot_grid(pl1,pl2,pl3,ncol=3,align="hv",rel_widths=c(1,2.5,1.5))
+plot_grid(pl1,pl2,pl3,ncol=3,align="hv",rel_widths=c(1.4,2.5,1.5))
 dev.off();
 
 

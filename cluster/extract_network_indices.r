@@ -1,77 +1,3 @@
-###########################################
-###########################################
-#' Check for packages and if necessary install into library 
-#+ message = FALSE
-rm(list=ls())
-pkgs <- c("data.table", "dplyr","R2jags","ggplot2","bipartite","FactoMineR","factoextra","gridExtra","cowplot","ggpubr","scales") 
-
-inst <- pkgs %in% installed.packages()
-if (any(inst)) install.packages(pkgs[!inst])
-pkg.out <- lapply(pkgs, require, character.only = TRUE)
-
-setwd(dir="C:/Users/Duchenne/Documents/evolution_pheno_morpho/scripts/functions and secondary scripts")
-
-comp_vec=c(2,5)
-time_vec=plyr::round_any(seq(sqrt(0),sqrt(2000),length.out=10)^2,10)
-
-##### SIMULATIONS WITH TWO TRAITS
-datf=NULL
-for(competition in comp_vec){
-for (rich in c(10,20,30)){
-for(i in 1:100){
-dat=fread(paste0("C:/Users/Duchenne/Documents/evolution_pheno_morpho/results_symmetric/ueq_both_",i,"_",rich,"_",competition,".csv"))
-dive=rich*2
-names(dat)[1:(dive)]=paste0("mu_",1:dive)
-names(dat)[(dive+1):(dive*2)]=paste0("sd_",1:dive)
-names(dat)[(dive*2+1):(dive*3)]=paste0("mu2_",1:dive)
-names(dat)[(dive*3+1):(dive*4)]=paste0("sd2_",1:dive)
-names(dat)[(dive*4+1)]="time"
-
-dat2=melt(dat,id.vars=c("trait","time"))
-dat2$type="mu"
-dat2$type[grep("mu2",dat2$variable)]="mu2"
-dat2$type[grep("sd",dat2$variable)]="sd"
-dat2$type[grep("sd2",dat2$variable)]="sd2"
-dat2$species=gsub("mu2_","",gsub("mu_","",dat2$variable))
-dat2$species=as.numeric(gsub("sd2_","",gsub("sd_","",dat2$species)))
-dat2$comp=competition
-dat2$essai=i
-dat2$rich=rich
-datf=rbind(datf,dat2)
-}
-}
-}
-##### SIMULATIONS WITH ONE TRAITS
-for(competition in comp_vec){
-for (rich in c(10,20,30)){
-for(i in 1:100){
-dat=fread(paste0("C:/Users/Duchenne/Documents/evolution_pheno_morpho/results_symmetric/ueq_",i,"_",rich,"_",competition,".csv"))
-dive=rich*2
-names(dat)[1:(dive)]=paste0("mu_",1:dive)
-names(dat)[(dive+1):(dive*2)]=paste0("sd_",1:dive)
-names(dat)[(dive*2+1)]="time"
-
-dat2=melt(dat,id.vars=c("trait","time"))
-dat2$type="mu"
-dat2$type[grep("sd",dat2$variable)]="sd"
-dat2$species=gsub("mu_","",dat2$variable)
-dat2$species=as.numeric(gsub("sd_","",dat2$species))
-dat2$species[dat2$species>dive]=dat2$species[dat2$species>dive]-dive
-dat2$comp=competition
-dat2$essai=i
-dat2$rich=rich
-datf=rbind(datf,dat2)
-}
-}
-}
-
-setwd(dir="C:/Users/Duchenne/Documents/evolution_pheno_morpho/")
-fwrite(datf,"species_level_data_symmetric.csv")
-datf_alleg=datf[datf$time %in% time_vec,]
-fwrite(datf_alleg,"species_level_data_symmetric_alleg.csv")
-
-########################################### TO ran on HPC
-###########################################
 #' Check for packages and if necessary install into library 
 #+ message = FALSE
 pkgs <- c("data.table", "dplyr","bipartite") 
@@ -93,23 +19,21 @@ ess <- as.numeric(args_contents[[1]])
 print(ess)
 
 
-datf=fread("/home/duchenne/pheno/species_level_data_symmetric_alleg.csv")
+datf=fread("/home/duchenne/pheno/species_level_data_new_alleg.csv")
 datf$type="mu"
 datf$type[grep("mu2",datf$variable)]="mu2"
 datf$type[grep("sd",datf$variable)]="sd"
 datf$type[grep("sd2",datf$variable)]="sd2"
 
+
 ncalc=10
 indf=NULL
 motifs=NULL
 
-comp_vec=c(2,5)
-time_vec=unique(datf$time)
-
-for(competition in comp_vec){
+for(competition in c(2,5)){
 for (rich in c(10,20,30)){
-for(tr in c("morpho","pheno")){
-for(ti in time_vec){
+for(tr in c("both","morpho","pheno")){
+for(ti in plyr::round_any(seq(sqrt(0),sqrt(3000),length.out=10)^2,10)){
 bidon=subset(datf,essai==ess & time==ti & trait==tr & rich==rich & comp==competition)
 
 #build interaction matrix:
@@ -158,14 +82,16 @@ phen_a = matrix(NA, rich, rich)
 for(i in 1:rich){
 	mu1=invlogit1(subset(bidon,type=="mu" & species==i)$value)
 	sd1=invlogit(subset(bidon,type=="sd" & species==i)$value)
-	for(j in 1:(rich)){
-		similarity=sum(m[,i] * m[,j])/sum(m[,i])
+	for(j in i:(rich)){
+		similarity=mean(sqrt(m[,i] * m[,j]))
 		mu2=invlogit1(subset(bidon,type=="mu" & species==j)$value)
 		sd2=invlogit(subset(bidon,type=="sd" & species==j)$value)
 		f=function(x){pmin(dnorm(x,mu1,sd1),dnorm(x,mu2,sd2))}
 		phen=sum(f(seq(0,365,0.1)))*0.1
 		phen_a[i,j]=phen
+		phen_a[j,i]=phen
 		comp_a[i,j]=similarity
+		comp_a[j,i]=similarity
 	}  
 }
 diag(comp_a)=1
@@ -177,14 +103,16 @@ phen_p = matrix(NA, rich, rich)
 for(i in 1:rich){
 	mu1=invlogit1(subset(bidon,type=="mu" & species==(i+rich))$value)
 	sd1=invlogit(subset(bidon,type=="sd" & species==(i+rich))$value)
-	for(j in 1:(rich)){
-		similarity=sum(t(m)[,i] * t(m)[,j])/sum(t(m)[,i])
+	for(j in i:(rich)){
+		similarity=mean(sqrt(t(m)[,i] * t(m)[,j]))
 		mu2=invlogit1(subset(bidon,type=="mu" & species==(j+rich))$value)
 		sd2=invlogit(subset(bidon,type=="sd" & species==(j+rich))$value)
 		f=function(x){pmin(dnorm(x,mu1,sd1),dnorm(x,mu2,sd2))}
 		phen=sum(f(seq(0,365,0.1)))*0.1
 		phen_p[i,j]=phen
+		phen_p[j,i]=phen
 		comp_p[i,j]=similarity
+		comp_p[j,i]=similarity
 	}  
 }
 diag(comp_p)=1
@@ -254,7 +182,7 @@ ind$feas_comp=mean(vec_stab)
 ind$feas_comp_se=sd(vec_stab)/sqrt(ncalc)
 
 ######################### CALCULATE FEASIBILITY WITH FEW DIFFERENT MEAN FIELDS
-for(competition_feas in c(1,comp_vec)){
+for(competition_feas in c(0.1,1,2,5)){
 for(rho in c(0.01,0.05,0.2,0.4,0.6)){
 comp_a[,]=rho #mean(c(comp_p,comp_a))
 comp_p[,]=rho #mean(c(comp_p,comp_a))
@@ -288,27 +216,5 @@ indf=rbind(indf,ind)
 }
 }
 
-fwrite(indf,paste0("/home/duchenne/pheno/aggreg_simues_symmetric/networks_info_",ess,".csv"))
+fwrite(indf,paste0("/home/duchenne/pheno/aggreg_simues/networks_info_",ess,".csv"))
 #
- 
-###############################
-#################### AGGREGATE NETWORKS INFORMATION IN A UNIQUE TABLE
-#' Check for packages and if necessary install into library 
-#+ message = FALSE
-rm(list=ls())
-pkgs <- c("data.table", "dplyr","R2jags","ggplot2","bipartite","FactoMineR","factoextra","gridExtra","cowplot","ggpubr","scales") 
-
-inst <- pkgs %in% installed.packages()
-if (any(inst)) install.packages(pkgs[!inst])
-pkg.out <- lapply(pkgs, require, character.only = TRUE)
-
-indf=NULL
-for(ess in 1:100){
-ind=fread(paste0("C:/Users/Duchenne/Documents/evolution_pheno_morpho/aggreg_simues_symmetric/networks_info_",ess,".csv"))
-
-ind2=fread(paste0("C:/Users/Duchenne/Documents/evolution_pheno_morpho/aggreg_simues_symmetric/networks_info_both_",ess,".csv"))
-indf=rbind(indf,ind,ind2)
-}
-fwrite(indf,"C:/Users/Duchenne/Documents/evolution_pheno_morpho/networks_info_symmetric.csv")
-
-

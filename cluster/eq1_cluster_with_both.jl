@@ -1,3 +1,4 @@
+
 ENV["JULIA_NUM_PRECOMPILE_TASKS"]=250
 
 using Pkg; Pkg.instantiate()
@@ -20,27 +21,27 @@ const sitef=tab[jj,"site"]
 const essai=tab.essai[jj]
 const nbsp_a=liste.na[liste.site .== sitef][1]
 const nbsp_p=liste.np[liste.site .== sitef][1]
-
+const tf=3000
 
 include("/home/duchenne/pheno/derivatives_function_m_pheno_or_morpho_discrete_symmetric.jl")
 include("/home/duchenne/pheno/derivatives_function_m_pheno_and_morpho_discrete_symmetric.jl")
 const alpha=1
 const r=-0.5
 const epsilon=0.01
-const tf=3000
+
 function simue(pini)
     alpha,r,epsilon,df,nbsp_a,nbsp_p,competition,tf = pini
     traits=["both";"pheno";]
     final=missing
     for trait in traits
         if trait=="both"
-            uinit=[ones(Float64,nbsp_a+nbsp_p);df.mu_phen[1:(nbsp_a+nbsp_p)];df.sd_phen[1:(nbsp_a+nbsp_p)];reverse(df.mu_phen)[1:(nbsp_a+nbsp_p)];reverse(df.sd_phen)[1:(nbsp_a+nbsp_p)];]
+            uinit=[ones(Float64,nbsp_a+nbsp_p);df.mu_phen[1:dive*2];df.sd_phen[1:dive*2];reverse(df.mu_phen)[1:dive*2];reverse(df.sd_phen)[1:dive*2];]
             funcdev=mDerivative2
-            p=nbsp_a,nbsp_p,epsilon,alpha,competition,r
+            p=nbsp_a,nbsp_p,epsilon,alpha,competition,trait,r
         else
             uinit=[ones(Float64,nbsp_a+nbsp_p);df.mu_phen[1:(nbsp_a+nbsp_p)];df.sd_phen[1:(nbsp_a+nbsp_p)];]
             funcdev=mDerivative
-            p=nbsp_a,nbsp_p,epsilon,alpha,competition,trait,r
+            p=nbsp_a,nbsp_p,epsilon,alpha,competition,r
         end
         sol = @inbounds funcdev(uinit,p,tf)
         if trait=="both"
@@ -63,16 +64,3 @@ for competition in [5;]
       GC.gc()
       CSV.write(join(["/home/duchenne/pheno/results_empir/ueq_",sitef,"_",essai,".csv"]),finalf)
 end
-  
-
-
-
-
-
-
-
-
-
-
-
-

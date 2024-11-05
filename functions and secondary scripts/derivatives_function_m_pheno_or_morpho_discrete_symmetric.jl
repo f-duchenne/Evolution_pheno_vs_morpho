@@ -93,7 +93,7 @@
                             phen=1.0
                         end
                         competitor= @view m[:,v]
-                        similarity=sum(mut_interactions .* competitor)/sum(mut_interactions)
+                        similarity=mean(sqrt.(mut_interactions .* competitor))
                         comp_interactions[v]=phen.*similarity
                     end
                     return(comp_interactions)
@@ -133,7 +133,7 @@
                             phen=1.0
                         end
                         competitor = @view m[v,:]
-                        similarity=sum(mut_interactions .* competitor)/sum(mut_interactions)
+                        similarity=mean(sqrt.(mut_interactions .* competitor))
                         comp_interactions[v]=phen.*similarity
                     end
                     return(comp_interactions)
