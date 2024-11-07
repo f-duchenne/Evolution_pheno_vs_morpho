@@ -43,7 +43,7 @@ strip.background=element_rect(fill=NA,color=NA))+
 scale_color_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+ylab("Changes in trait parameters")+guides(linetype=guide_legend(override.aes=list(fill=NA,color="black")))+
 facet_grid(cols=vars(rich),labeller = label_bquote(cols=n[sp] == .(rich)))+labs(colour="Simulations with:",linetype="trait")+ggtitle("a",subtitle="Standard deviation of the trait(s)")
 
-png("Fig.S7.png",width=1300,height=800,res=150)
+png("Fig.S5.png",width=1300,height=1100,res=150)
 plot_grid(s7_a,s7_b,ncol=1,align="hv")
 dev.off();
 
@@ -95,12 +95,11 @@ indf3=subset(indf2,competition==5)
 indfspeed=indf3 %>% group_by(trait,competition,essai,rich) %>% mutate(speed=sqrt((Dim.1-lag(Dim.1))^2+(Dim.2-lag(Dim.2))^2+(Dim.3-lag(Dim.3))^2)/(time-lag(time)))
 
 s8=ggplot(subset(indfspeed,time>0),aes(x=time,y=speed,color=trait))+geom_line(alpha=0.2,aes(group=paste(essai,competition,trait,rich)))+
-stat_smooth()+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
 strip.background=element_rect(fill=NA,color=NA))+scale_color_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+ylab("Changes in network structure")+labs(colour="Simulations with:",fill="Simulations with:")+
 guides(linetype=guide_legend(override.aes=list(fill=NA)))
 
-png("Fig.S8.png",width=1200,height=600,res=150)
+png("Fig.S6.png",width=1200,height=600,res=150)
 s8
 dev.off();
 
