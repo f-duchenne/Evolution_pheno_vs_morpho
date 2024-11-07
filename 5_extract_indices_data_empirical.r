@@ -31,8 +31,8 @@ emp=networklevel(mbi,index=c("weighted connectance","weighted nestedness","inter
 emp=as.data.frame(t(emp))
 emp$NODF=networklevel(round(mbi,digits=5),index=c("weighted NODF"))
 names(emp)=gsub("weighted ","",names(emp))
-emp$mut.strength=mean(m)
 emp$modularity=computeModules(mbi, method="Beckett")@"likelihood"
+emp$mut.strength=mean(m)
 emp$na=ncol(m)
 emp$np=nrow(m)
 emp$site=site

@@ -14,6 +14,7 @@ empf=fread("empirical_networks.csv")
 names(empf)[1:2]=paste0("w",names(empf)[1:2])
 names(empf)[3]="inter. evenness"
 names(empf)[5]="wNODF"
+setcolorder(empf,c(names(empf)[1:5],"modularity","mut.strength",names(empf)[8:ncol(empf)]))
 colo=c("chartreuse3","dodgerblue4","gold3")
 
 empf$dive=empf$na+empf$np 
@@ -26,7 +27,6 @@ names(indf)=gsub("weighted ","w",names(indf))
 names(indf)[3]="inter. evenness"
 names(indf)[5]="wNODF"
 names(indf)[7]="mut.strength"
-
 indf$dive=indf$nbsp_a+indf$nbsp_p 
 indf$prop_motif=(indf$motifn/indf$motifntot)
 #model=glmmTMB(feas~(prop_motif+dive)*trait+(1|site),family=beta_family(link="logit"),data=subset(indf,competition==10 & rho==0.05 & time==2000))
@@ -61,16 +61,26 @@ plot_grid(plot_acp,pl2,ncol=2,align="hv")
 dev.off();
 
 
-empf2=subset(empf,competition==5 & rho==0.05 & trait=="both")
+empf2=subset(empf,competition==5 & rho==0.05)
 pl1=ggplot()+
 geom_boxplot(data=empf2,aes(x="Empirical",y=motifn/motifntot))+
-geom_boxplot(data=subset(indf,rho==0.05 & time==2000),aes(y=motifn/motifntot,x="Simulated\nCoevolved"),color=colo[1])+
+geom_boxplot(data=subset(indf,rho==0.05 & time==2000 & trait=="both"),aes(y=motifn/motifntot,x="Simulated\nCoevolved"),color=colo[1])+
 geom_boxplot(data=subset(indf,rho==0.05 & time==0),aes(y=motifn/motifntot,x="Simulated\nInitial"),color="grey")+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.border=element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.position="none",
 axis.title.x=element_blank(),
 strip.background=element_rect(fill=NA,color=NA))+
 ggtitle("a")+
 ylab('Percentage of "V+" motifs')+scale_y_continuous(labels=scales::percent)
+
+ggplot()+
+geom_boxplot(data=empf2,aes(x="Empirical",y=wNODF))+
+geom_boxplot(data=subset(indf,rho==0.05 & time==2000 & trait=="both"),aes(y=wNODF,x="Simulated\nCoevolved"),color=colo[1])+
+geom_boxplot(data=subset(indf,rho==0.05 & time==0),aes(y=wNODF,x="Simulated\nInitial"),color="grey")+
+theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.border=element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.position="none",
+axis.title.x=element_blank(),
+strip.background=element_rect(fill=NA,color=NA))+
+ggtitle("a")+
+ylab('wNODF')
 
 
 empf2=subset(empf,competition==5)
