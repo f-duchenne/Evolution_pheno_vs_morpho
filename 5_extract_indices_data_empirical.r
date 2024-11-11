@@ -188,7 +188,7 @@ competition=5
 
 datf=NULL
 for(ess in 1:10){
-for(tr in c("both","pheno")){
+for(tr in c("both","pheno","morpho")){
 for(jj in 1:nrow(liste)){
 dat=fread(paste0("C:/Users/Duchenne/Documents/evolution_pheno_morpho/results_empir_symmetric/ueq_",liste$site[jj],"_",tr,"_",ess,".csv"))
 nbsp_a=liste$na[jj]
