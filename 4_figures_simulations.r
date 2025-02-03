@@ -5,7 +5,7 @@
 #+ message = FALSE
 rm(list=ls())
 pkgs <- c("data.table", "dplyr","R2jags","ggplot2","bipartite","FactoMineR","factoextra","gridExtra","cowplot","ggpubr","scales","piecewiseSEM",
-"igraph","qgraph","car","nlme","viridis") 
+"igraph","qgraph","car","nlme","viridis","ggeffects","emmeans") 
 
 inst <- pkgs %in% installed.packages()
 if (any(inst)) install.packages(pkgs[!inst])
@@ -43,7 +43,7 @@ strip.background=element_rect(fill=NA,color=NA))+
 scale_color_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+ylab("Changes in trait parameters")+guides(linetype=guide_legend(override.aes=list(fill=NA,color="black")))+
 facet_grid(cols=vars(rich),labeller = label_bquote(cols=n[sp] == .(rich)))+labs(colour="Simulations with:",linetype="trait")+ggtitle("a",subtitle="Standard deviation of the trait(s)")
 
-png("Fig.S5.png",width=1300,height=1100,res=150)
+png("Fig.S6.png",width=1300,height=1100,res=150)
 plot_grid(s7_a,s7_b,ncol=1,align="hv")
 dev.off();
 
@@ -91,6 +91,7 @@ indf2=subset(indf,rho==0.01 & competition_feas==competition)
 acp=PCA(indf2[,1:7],graph=FALSE)
 indf2=cbind(indf2,acp$ind$coord)
 indf3=subset(indf2,competition==5)
+indf3$comp=apply(indf3[,c("comp_a","comp_p")],1,mean)
 
 indfspeed=indf3 %>% group_by(trait,competition,essai,rich) %>% mutate(speed=sqrt((Dim.1-lag(Dim.1))^2+(Dim.2-lag(Dim.2))^2+(Dim.3-lag(Dim.3))^2)/(time-lag(time)))
 
@@ -190,7 +191,6 @@ strip.background=element_rect(fill=NA,color=NA))+
 scale_color_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+scale_fill_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+ylab("Average mutualism strength")+guides(linetype=guide_legend(override.aes=list(fill=NA,color="black")))+
 xlab("Time")+ggtitle("a")+labs(colour="Simulations with:",fill="Simulations with:",linetype=expression(paste(n[sp]," / guild")))+scale_x_continuous(breaks=c(0,1000,2000))
 
-indf3$comp=apply(indf3[,c("comp_a","comp_p")],1,mean)
 p2=ggplot()+
 stat_smooth(data=indf3,aes(y=comp,x=time,color=trait,fill=trait,linetype=as.factor(rich)))+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.border=element_blank(),
@@ -207,14 +207,15 @@ strip.background=element_rect(fill=NA,color=NA))+
 scale_color_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+scale_fill_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+ylab("mutualism/competition")+guides(linetype=guide_legend(override.aes=list(fill=NA,color="black")))+
 xlab("Time")+ggtitle("c")+labs(colour="Simulations with:",fill="Simulations with:")+scale_x_continuous(breaks=c(0,1000,2000))
 
-
-p4=ggplot(data=subset(indf3,trait!="morpho"),aes(y=motifn/motifntot,x=time,color=trait,fill=trait,linetype=as.factor(rich)))+
-stat_smooth()+
+indf3$motifn[indf3$trait=="morpho"]=0
+p4=ggplot(data=subset(indf3),aes(y=motifn/motifntot,x=time,color=trait,fill=trait,linetype=as.factor(rich)))+
+stat_summary(fun.y = mean, fun.ymin = function(x) mean(x) - 1.96*sd(x)/length(x), fun.ymax = function(x) mean(x) + 1.96*sd(x)/length(x), geom = "ribbon",alpha=0.1,colour=NA)+
+stat_summary(fun.y=mean, geom="line", size = 0.5,linewidth=1.3)+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.border=element_blank(),
 panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
 strip.background=element_rect(fill=NA,color=NA),
 legend.key = element_rect(fill = "white"),legend.position="none")+
-scale_color_manual(values=colo[-2])+scale_fill_manual(values=colo[-2])+ylab('Proportion of "V+" motifs')+
+scale_color_manual(values=colo)+scale_fill_manual(values=colo)+ylab('Proportion of "V+" motifs')+
 xlab("Time")+ggtitle("d")+
 guides(linetype=guide_legend(override.aes = list(fill = "white",colour="black")))+scale_x_continuous(breaks=c(0,1000,2000))
 
@@ -230,6 +231,13 @@ dev.off();
 
 ######################################### FIGURE 3
 indf4=subset(indf,competition==5 & competition_feas==competition)
+
+ggplot(data=subset(indf,rho==0.4 & competition_feas==competition),aes(x=time,y=feas_structure,color=trait,group=paste(time,trait)))+geom_violin(position=position_dodge(width=0.5),width=8,scale="width",show.legend=FALSE)+
+geom_boxplot(width=3,position=position_dodge(width=0.5))+
+theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.background = element_blank(),
+strip.background=element_rect(fill=NA,color=NA),panel.border=element_blank())+
+scale_color_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+
+labs(linetype=expression(paste(n[sp]," / guild")))+ylab(expression(paste("Structural stability  ",(omega))))+xlab("Time")+facet_grid(cols=vars(rich),rows=vars(competition), labeller = label_bquote(cols=n[sp] == .(rich)))+scale_x_sqrt(breaks=c(0,1000,2000))+labs(colour="Simulations with:",fill="Simulations with:")
 
 pl6=ggplot(data=subset(indf4,rho==0.05),aes(x=time,y=feas,color=trait,group=paste(time,trait)))+geom_violin(position=position_dodge(width=0.5),width=8,scale="width",show.legend=FALSE)+
 geom_boxplot(width=3,position=position_dodge(width=0.5))+
@@ -256,7 +264,7 @@ pdf("Fig.3.pdf",width=6,height=3)
 pl6b
 dev.off();
 
-############################## FIGURE S5
+############################## FIGURE S4
 indf4=subset(indf,competition==2 & competition_feas==competition)
 
 pl6=ggplot(data=subset(indf4,rho==0.05),aes(x=time,y=feas,color=trait,group=paste(time,trait)))+geom_violin(position=position_dodge(width=0.5),width=8,scale="width",show.legend=FALSE)+
@@ -274,7 +282,6 @@ strip.background=element_rect(fill=NA,color=NA),panel.border=element_blank())+
 scale_color_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+
 labs(linetype=expression(paste(n[sp]," / guild")))+ylab(expression(paste("Structural stability  ",(omega))))+xlab("Time")+facet_grid(cols=vars(rich), labeller = label_bquote(cols=n[sp] == .(rich)))+scale_x_sqrt(breaks=c(0,1000,2000))+ggtitle("b",subtitle="high interspecific competition")+labs(colour="Simulations with:",fill="Simulations with:")
 
-
 plot_grid(pl6,pl6b,ncol=1,align="hv")
 png("Fig.S4.png",width=1200,height=1000,res=150)
 plot_grid(pl6,pl6b,ncol=1,align="hv")
@@ -282,22 +289,46 @@ dev.off();
 
 ############################# FIGURE 4
 indf5=subset(indf,time %in% c(0,2000) & competition_feas==competition & competition==5)
-b=dcast(indf5,trait+competition+rho+rich~time,value.var="feas",fun.aggregate=mean)
-names(b)[5:6]=paste0("t",names(b)[5:6])
+indf5$trait=factor(indf5$trait,labels=c("both traits","only morpho","only pheno"))
+indf5=indf5 %>% group_by(trait,essai,rho,competition,competition_feas,time) %>% mutate(feas_ini=feas[rich==10])  
+indf5$time2=factor(indf5$time,labels=c("initial (t = 0)","coevolved (t = 2000)"))
+indf5$time2=factor(indf5$time2,levels=c("coevolved (t = 2000)","initial (t = 0)"))
 
-ggplot(data=b,aes(x=rich,y=t2000-t0,color=trait,alpha=as.factor(rho)))+
-geom_point()+geom_line()
-scale_shape_manual(values = c(21,22,23))+
+model=glm(feas~rich*time2*trait,data=subset(indf5,rho==0.4),family=quasibinomial)
+
+b=ggpredict(model,c("rich[10:30]","time2","trait"))
+pl7a=ggplot()+
+geom_line(data=b,aes(x=x,y=predicted,color=facet,linetype=group))+
+geom_point(data=subset(indf5,rho==0.4),aes(x=rich,y=feas,color=trait,shape=as.factor(time2)),alpha=0.2)+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
 strip.background=element_rect(fill=NA,color=NA),panel.border=element_blank())+
-labs(linetype=expression(paste(n[sp]," / guild")))+ylab(expression(paste("Structural stability  ",(omega))))+xlab("Number of species per guild")+facet_wrap(~rich)+scale_color_manual(values=colo,guide=FALSE)+geom_abline(intercept=0,slope=1)
-
+labs(linetype="",shape="")+ylab(expression(paste("Structural stability  ",(omega))))+xlab("Number of species per guild")+scale_color_manual(values=colo)+scale_fill_manual(values=colo)+
 #scale_color_brewer(palette = "Reds")+
-labs(alpha=expression(rho))+ggtitle("a",subtitle="Initial networks")+scale_x_continuous(breaks=c(10,20,30))
+labs(alpha=expression(rho),color="Simulations with:")+scale_x_continuous(breaks=c(10,20,30))+
+ggtitle("a")
 
-indf5$trait=factor(indf5$trait,labels=c("both traits","only morpho","only pheno"))
+b2=as.data.frame(emmeans(model, pairwise ~ rich | time2 + trait)$emmeans)
+b2$asymp.LCL[b2$time2=="initial (t = 0)" & b2$trait=="only morpho"]=-14.0735
+b2$asymp.UCL[b2$time2=="initial (t = 0)" & b2$trait=="only morpho"]=-0.4922
+b2$time=0
+b2$time[b2$time2=="coevolved (t = 2000)"]=2000
+b2$time=ordered(b2$time,levels=c(0,2000))
 
-model=glm(feas~rich*as.factor(time),data=subset(indf5,trait=="only pheno" & rho==0.6),family=quasibinomial)
+pl7b=ggplot(data=subset(b2,trait!="only morpho"),aes(x=time,y=emmean,color=trait))+
+geom_pointrange(aes(ymin=asymp.LCL,ymax=asymp.UCL,shape=as.factor(time2)))+
+geom_line(aes(group=trait))+
+theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.position="none",
+strip.background=element_rect(fill=NA,color=NA),panel.border=element_blank())+
+labs(linetype="",shape="")+ylab("Slope of the\ndiversity-stability trade off")+xlab("")+scale_color_manual(values=colo[-2],guide=FALSE)+scale_fill_manual(values=colo)+
+ggtitle("b")+scale_x_discrete(breaks=c(0,2000),labels=c("initial","coevolved"))
+
+plot_grid(pl7a,pl7b,ncol=2,align="hv")
+
+pdf("Fig.4.pdf",width=6,height=3)
+plot_grid(pl7a,pl7b,ncol=2,align="hv",rel_widths=c(2,1))
+dev.off();
+
+############################# FIGURE S5
 
 pl7=ggplot(data=subset(indf5,time==0),aes(x=rich,y=feas,color=trait,alpha=as.factor(rho)))+
 stat_summary(fun.y=mean, geom="line", size = 0.5,position=position_dodge(width=0.5))+
@@ -320,7 +351,7 @@ labs(alpha=expression(rho))+ggtitle("b",subtitle="Coevolved networks")+scale_x_c
 
 plot_grid(pl7,pl8,ncol=1,align="hv")
 
-pdf("Fig.4.pdf",width=6,height=6)
+png("Fig_S5.png",width=1200,height=900)
 plot_grid(pl7,pl8,ncol=1,align="hv")
 dev.off();
 
