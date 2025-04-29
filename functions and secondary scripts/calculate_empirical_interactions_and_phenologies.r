@@ -9,23 +9,18 @@ inst <- pkgs %in% installed.packages()
 if (any(inst)) install.packages(pkgs[!inst])
 pkg.out <- lapply(pkgs, require, character.only = TRUE)
 
-setwd(dir="C:/Users/Duchenne/Documents/evolution_pheno_morpho/")
-###### FLOWER PHENOLOGY:
-flowers=fread("flower_count.csv")
+path_folder="C:/Users/Duchenne/Documents/evolution_pheno_morpho/data_zenodo/"
+setwd(dir=path_folder)
+
+weigthed.mean=function(x,y){sum(x*y,na.rm=T)/sum(y,na.rm=T)}
+
+###### LOAD FLOWER COUNT:
+flowers=fread("data/empirical/interactions/flower_count.csv")
 flowers$date=as.Date(paste(flowers$Day,flowers$Month,flowers$Year,sep="/"),format="%d/%m/%Y")
 flowers$jj=yday(flowers$date)
 tab=unique(flowers[,c("Site_ID")])
 
-empf=NULL
-weigthed.mean=function(x,y){sum(x*y,na.rm=T)/sum(y,na.rm=T)}
-phenp=flowers %>% group_by(Plant_gen_sp) %>% summarise(mu=weigthed.mean(jj,Flower_abundance),sde=sqrt(Hmisc::wtd.var(jj,Flower_abundance)))
-
-fwrite(phenp,"flower_pheno_empirical.csv")
-
-######### INTERACTIONS:
-setwd(dir="C:/Users/Duchenne/Documents/evolution_pheno_morpho/scripts")
-source("toolbox.R")
-setwd(dir="C:/Users/Duchenne/Documents/evolution_pheno_morpho/")
+###### LOAD INTERACTIONS:
 datf=as.data.frame(fread("BeeFun Master_inter.csv"))
 datf$Site_ID[datf$Site_ID=="Convento_de _la_luz"]="Convento_de_la_luz"
 datf$Site_ID[datf$Site_ID=="La_Rocina"]="La_rocina"
@@ -33,18 +28,19 @@ datf$date=as.Date(paste(datf$Day,datf$Month,datf$Year,sep="/"),format="%d/%m/%Y"
 datf$jj=yday(datf$date)
 
 #pheno plants:
-phenp=fread("flower_pheno_empirical.csv")
+phenp=flowers %>% group_by(Plant_gen_sp) %>% summarise(mu=weigthed.mean(jj,Flower_abundance),sde=sqrt(Hmisc::wtd.var(jj,Flower_abundance)))
 phenp$sde[is.na(phenp$sde)]=1
 phenp$sde[phenp$sde==0]=1
+fwrite(phenp,"data/empirical/interactions/flower_pheno_empirical.csv")
 
 #pheno poll:
 phena=datf %>% group_by(Pollinator_gen_sp) %>% summarise(mu=weigthed.mean(jj,Frequency),sde=sqrt(Hmisc::wtd.var(jj,Frequency)))
 phena=subset(phena,!is.na(mu))
 phena$sde[is.na(phena$sde)]=1
 phena$sde[phena$sde==0]=1
+fwrite(phena,"data/empirical/interactions/poll_pheno_empirical.csv")
 
-fwrite(phena,"poll_pheno_empirical.csv")
-
+#mutualistic interactions
 sites=unique(datf$Site_ID)
 sites=sites[!(sites %in% c("El_pozo","El_Pozo"))]
 weigthed.mean=function(x,y){sum(x*y,na.rm=T)/sum(y,na.rm=T)}
@@ -70,4 +66,4 @@ m=m/sqrt(matrix(apply(m,1,sum),ncol=1) %*% matrix(apply(m,2,sum),nrow=1))
 networks[[site]]=m
 }
 
-save(networks, file = "matrices_empirical_networks.RData")
+save(networks, file = "data/empirical/interactions/matrices_empirical_networks.RData")
