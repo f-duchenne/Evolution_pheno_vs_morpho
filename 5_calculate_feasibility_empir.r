@@ -163,7 +163,7 @@ for (site in sites){
 
 }
 
-fwrite(empf,"stability_of_empirical_networks.csv")
+fwrite(empf,"data/empirical/stability_of_empirical_networks.csv")
 
 
 
