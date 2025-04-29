@@ -39,7 +39,6 @@ These outputs of simulations and empirical data allow to start analyses from any
 ### Project structure
 ```
 .
-
 └── data_zenodo
 
     ├── data
