@@ -37,7 +37,7 @@ Codes, outputs of simulations and empirical data can be found here: https://doi.
 These outputs of simulations and empirical data allow to start analyses from anywhere in the worklow. For example, if one wants to reproduce the figures and analyses, they can start analyses from script 4, without running the simulations again, because all intermediate outputs are included in the data folder.
 
 ### Project structure
-
+```
 .
 
 └── data_zenodo
@@ -67,7 +67,7 @@ These outputs of simulations and empirical data allow to start analyses from any
               | numbered scripts
               
     ├── README.md
-
+```
 The folder "data_zenodo/data/empirical/interactions" contains the files with empirical mutualistic interactions and species phenologies. *flow_pheno_empirical.csv* and *poll_pheno_empirical.csv* contain the empirical phenological parameters for plant and pollinator species, respectively: the mean activity day (mu) and its standard deviation (sde) representing the duration of the activity period. *matrices_empirical_networks.RData* contains an R object with the 17 networks used. Plants are in rows and pollinators in columns, with each cell representing the average interaction value across sampling rounds, corrected by abundances. You can access it in R via:
 
 ```R
