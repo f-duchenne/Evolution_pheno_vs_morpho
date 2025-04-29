@@ -3,13 +3,15 @@
 #' Check for packages and if necessary install into library 
 #+ message = FALSE
 rm(list=ls())
-pkgs <- c("data.table", "dplyr","R2jags","ggplot2","bipartite","FactoMineR","factoextra","gridExtra","cowplot","ggpubr","scales","viridis","ggthemes") 
+pkgs <- c("data.table", "dplyr","ggplot2","bipartite","gridExtra","cowplot","ggpubr","scales","viridis","ggthemes") 
 
 inst <- pkgs %in% installed.packages()
 if (any(inst)) install.packages(pkgs[!inst])
 pkg.out <- lapply(pkgs, require, character.only = TRUE)
 
-setwd(dir="C:/Users/Duchenne/Documents/evolution_pheno_morpho/")
+path_folder="C:/Users/Duchenne/Documents/evolution_pheno_morpho/data_zenodo/"
+setwd(dir=path_folder)
+
 
 preci=1000
 dat=data.frame(species=rep(c("plant","poll1","poll2"),each=preci),x=seq(0,365,length.out=preci),mu=rep(c(190,150,230),each=preci),sd=rep(c(30,20,20),each=preci))
@@ -65,4 +67,4 @@ panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title
 
 bottomf2=plot_grid(pl1,blank,pl2,blank,ncol=2,align="hv")
 
-save(bottomf2,file="bottom_figure_2.RData")
+save(bottomf2,file="data/bottom_figure_2.RData")
