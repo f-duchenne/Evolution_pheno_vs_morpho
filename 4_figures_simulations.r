@@ -19,7 +19,7 @@ path_folder="C:/Users/Duchenne/Documents/evolution_pheno_morpho/data_zenodo/"
 setwd(dir=path_folder)
 
 ##################################### COMMUNITY LEVEL ########################
-indf=fread("data/networks_info.csv")
+indf=fread("data/simulated/outputs_simulations/networks_info.csv")
 names(indf)=gsub("weighted ","w",names(indf))
 names(indf)[3]="inter. evenness"
 names(indf)[5]="wNODF"
@@ -38,6 +38,53 @@ ggplot(subset(indfspeed,time>0),aes(x=time,y=speed,color=trait))+geom_line(alpha
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
 strip.background=element_rect(fill=NA,color=NA))+scale_color_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+ylab("Changes in network structure")+labs(colour="Simulations with:",fill="Simulations with:")+
 guides(linetype=guide_legend(override.aes=list(fill=NA)))
+
+############### FIGURE 1
+p1=ggplot()+
+stat_smooth(data=indf3,aes(y=mut.strength,x=time,color=trait,fill=trait,linetype=as.factor(rich),alpha=as.factor(competition)))+
+theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.border=element_blank(),
+panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.position="none",
+strip.background=element_rect(fill=NA,color=NA))+
+scale_color_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+scale_fill_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+ylab("Average mutualism strength")+guides(linetype=guide_legend(override.aes=list(fill=NA,color="black")))+
+xlab("Time")+ggtitle("b")+labs(colour="Simulations with:",fill="Simulations with:",linetype=expression(paste(n[sp]," / guild")))+scale_x_continuous(breaks=c(0,1000,2000))
+
+p2=ggplot()+
+stat_smooth(data=indf3,aes(y=comp,x=time,color=trait,fill=trait,linetype=as.factor(rich)))+
+theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.border=element_blank(),
+panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.position="bottom",
+strip.background=element_rect(fill=NA,color=NA))+
+scale_color_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+scale_fill_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+ylab("Average competition stength")+guides(linetype=guide_legend(title.position="top",title.hjust = 0.5,override.aes=list(fill=NA,color="black")),colour=guide_legend(title.position="top",title.hjust = 0.5))+
+xlab("Time")+ggtitle("c")+labs(colour="Simulations with:",fill="Simulations with:",linetype=expression(paste(n[sp]," / guild")))+scale_x_continuous(breaks=c(0,1000,2000))
+
+p3=ggplot()+
+stat_smooth(data=indf3,aes(y=mut.strength/(competition*comp),x=time,color=trait,fill=trait,linetype=as.factor(rich)))+
+theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.border=element_blank(),
+panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.position="none",
+strip.background=element_rect(fill=NA,color=NA))+
+scale_color_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+scale_fill_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+ylab("mutualism/competition")+guides(linetype=guide_legend(override.aes=list(fill=NA,color="black")))+
+xlab("Time")+ggtitle("d")+labs(colour="Simulations with:",fill="Simulations with:")+scale_x_continuous(breaks=c(0,1000,2000))
+
+indf3$motifn[indf3$trait=="morpho"]=0
+p4=ggplot(data=subset(indf3),aes(y=motifn/motifntot,x=time,color=trait,fill=trait,linetype=as.factor(rich)))+
+stat_summary(fun.y = mean, fun.ymin = function(x) mean(x) - 1.96*sd(x)/length(x), fun.ymax = function(x) mean(x) + 1.96*sd(x)/length(x), geom = "ribbon",alpha=0.1,colour=NA)+
+stat_summary(fun.y=mean, geom="line", size = 0.5,linewidth=1.3)+
+theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.border=element_blank(),
+panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
+strip.background=element_rect(fill=NA,color=NA),
+legend.key = element_rect(fill = "white"),legend.position="none")+
+scale_color_manual(values=colo)+scale_fill_manual(values=colo)+ylab('Proportion of "V+" motifs')+
+xlab("Time")+ggtitle("e")+
+guides(linetype=guide_legend(override.aes = list(fill = "white",colour="black")))+scale_x_continuous(breaks=c(0,1000,2000))
+
+leg <- as_ggplot(get_legend(p2))
+p2=p2+theme(legend.position="none")
+top=plot_grid(p1,p2,p3,p4,align="hv",ncol=4)
+load("data/top_figure_1.RData")
+grid.arrange(f1top,top,leg,ncol=1,heights=c(1,1,0.3))
+
+pdf("Figures/Fig.1.pdf",width=7,height=6)
+grid.arrange(f1top,top,leg,ncol=1,heights=c(1,1,0.3))
+dev.off();
 
 
 ############### FIGURE 1
@@ -116,54 +163,6 @@ png("Figures/Fig.S1.png",width=1200,height=1000,res=150)
 pl3b
 dev.off();
 
-
-
-############### FIGURE 2
-p1=ggplot()+
-stat_smooth(data=indf3,aes(y=mut.strength,x=time,color=trait,fill=trait,linetype=as.factor(rich)))+
-theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.border=element_blank(),
-panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.position="none",
-strip.background=element_rect(fill=NA,color=NA))+
-scale_color_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+scale_fill_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+ylab("Average mutualism strength")+guides(linetype=guide_legend(override.aes=list(fill=NA,color="black")))+
-xlab("Time")+ggtitle("a")+labs(colour="Simulations with:",fill="Simulations with:",linetype=expression(paste(n[sp]," / guild")))+scale_x_continuous(breaks=c(0,1000,2000))
-
-p2=ggplot()+
-stat_smooth(data=indf3,aes(y=comp,x=time,color=trait,fill=trait,linetype=as.factor(rich)))+
-theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.border=element_blank(),
-panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.position="bottom",
-strip.background=element_rect(fill=NA,color=NA))+
-scale_color_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+scale_fill_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+ylab("Average competition stength")+guides(linetype=guide_legend(title.position="top",title.hjust = 0.5,override.aes=list(fill=NA,color="black")),colour=guide_legend(title.position="top",title.hjust = 0.5))+
-xlab("Time")+ggtitle("b")+labs(colour="Simulations with:",fill="Simulations with:",linetype=expression(paste(n[sp]," / guild")))+scale_x_continuous(breaks=c(0,1000,2000))
-
-p3=ggplot()+
-stat_smooth(data=indf3,aes(y=mut.strength/(competition*comp),x=time,color=trait,fill=trait,linetype=as.factor(rich)))+
-theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.border=element_blank(),
-panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.position="none",
-strip.background=element_rect(fill=NA,color=NA))+
-scale_color_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+scale_fill_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+ylab("mutualism/competition")+guides(linetype=guide_legend(override.aes=list(fill=NA,color="black")))+
-xlab("Time")+ggtitle("c")+labs(colour="Simulations with:",fill="Simulations with:")+scale_x_continuous(breaks=c(0,1000,2000))
-
-indf3$motifn[indf3$trait=="morpho"]=0
-p4=ggplot(data=subset(indf3),aes(y=motifn/motifntot,x=time,color=trait,fill=trait,linetype=as.factor(rich)))+
-stat_summary(fun.y = mean, fun.ymin = function(x) mean(x) - 1.96*sd(x)/length(x), fun.ymax = function(x) mean(x) + 1.96*sd(x)/length(x), geom = "ribbon",alpha=0.1,colour=NA)+
-stat_summary(fun.y=mean, geom="line", size = 0.5,linewidth=1.3)+
-theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.border=element_blank(),
-panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
-strip.background=element_rect(fill=NA,color=NA),
-legend.key = element_rect(fill = "white"),legend.position="none")+
-scale_color_manual(values=colo)+scale_fill_manual(values=colo)+ylab('Proportion of "V+" motifs')+
-xlab("Time")+ggtitle("d")+
-guides(linetype=guide_legend(override.aes = list(fill = "white",colour="black")))+scale_x_continuous(breaks=c(0,1000,2000))
-
-leg <- ggpubr::as_ggplot(cowplot::get_legend(p2))
-p2=p2+theme(legend.position="none")
-top=plot_grid(p1,p2,p3,p4,align="hv",ncol=4)
-load("data/bottom_figure_2.RData")
-grid.arrange(top,leg,bottomf2,ncol=1,heights=c(1,0.3,1))
-
-pdf("Figures/Fig.2.pdf",width=7,height=6)
-grid.arrange(top,leg,bottomf2,ncol=1,heights=c(1,0.3,1))
-dev.off();
 
 ######################################### FIGURE 3
 indf4=subset(indf,competition_feas==competition & rho==0.05)
