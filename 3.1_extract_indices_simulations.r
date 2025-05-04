@@ -13,10 +13,10 @@ path_folder="C:/Users/Duchenne/Documents/evolution_pheno_morpho/data_zenodo/"
 setwd(dir=path_folder)
 
 
-comp_vec=c(2,5)
+comp_vec=c(2,4,6)
 time_vec=plyr::round_any(seq(sqrt(0),sqrt(2000),length.out=10)^2,10)
 
-##### SIMULATIONS WITH TWO TRAITS
+##### AGGREGATE SIMULATIONS WITH TWO TRAITS
 datf=NULL
 for(competition in comp_vec){
 for (rich in c(10,20,30)){
@@ -43,7 +43,7 @@ datf=rbind(datf,dat2)
 }
 }
 }
-##### SIMULATIONS WITH ONE TRAITS
+##### AGGREGATE SIMULATIONS WITH ONE TRAITS
 for(competition in comp_vec){
 for (rich in c(10,20,30)){
 for(i in 1:100){
@@ -67,10 +67,12 @@ datf=rbind(datf,dat2)
 }
 }
 
-fwrite(datf,"data/empirical/outputs_simulations/species_level.csv")
+fwrite(datf,"data/simulated/outputs_simulations/species_level.csv")
 datf_alleg=datf[datf$time %in% time_vec,]
-fwrite(datf_alleg,"data/empirical/outputs_simulations/species_level_alleg.csv")
+fwrite(datf_alleg,"data/simulated/outputs_simulations/species_level_alleg.csv")
 
+########################################### EXTRACT INDICES AND EXPORT INFORMATION AT COMMUNITY LEVEL FOR EACH REPLICATE
+###########################################
 ########################################### EXTRACT INDICES AND EXPORT INFORMATION AT COMMUNITY LEVEL FOR EACH REPLICATE
 ###########################################
 #' Check for packages and if necessary install into library 
@@ -93,26 +95,22 @@ args_contents <- strsplit(args, ' ')
 ess <- as.numeric(args_contents[[1]])
 print(ess)
 
-
-
-
-datf=fread("/home/duchenne/pheno/species_level_data_alleg.csv")
+datf=fread("/home/duchenne/pheno/species_level_alleg.csv")
 datf$type="mu"
 datf$type[grep("mu2",datf$variable)]="mu2"
 datf$type[grep("sd",datf$variable)]="sd"
 datf$type[grep("sd2",datf$variable)]="sd2"
 
-
 ncalc=10
 indf=NULL
 motifs=NULL
 
-comp_vec=c(2,5)
+comp_vec=c(2,4,6)
 time_vec=unique(datf$time)
 
 for(competition in comp_vec){
 	for (rich in c(10,20,30)){
-		for(tr in c("pheno","morpho")){
+		for(tr in c("pheno","morpho","both")){
 			for(ti in time_vec){
 				bidon=subset(datf,essai==ess & time==ti & trait==tr & rich==rich & comp==competition)
 
@@ -225,7 +223,6 @@ for(competition in comp_vec){
 				ind$motifn=motifn
 				ind$motifntot=motifntot
 
-
 				ind$competition=competition
 
 				######################### CALCULATE FEASIBILITY WITH STRCUTRED COMPETITION NETWORKS
@@ -247,23 +244,9 @@ for(competition in comp_vec){
 				ind$feas_structure=mean(vec_stab)
 				ind$feas_structure_se=sd(vec_stab)/sqrt(ncalc)
 
-				######################### CALCULATE FEASIBILITY WITH MEAN FIELD BUT MEAN VALUES FROM AVERAGE COMPETITION STRENGTH IN SIMULATIONS
-				ind$comp_a=mean(comp_phen_a[col(comp_phen_a)!=row(comp_phen_a)])
-				ind$comp_p=mean(comp_phen_p[col(comp_phen_p)!=row(comp_phen_p)])
-
-				comp_phen_a[,]=mean(comp_phen_a[col(comp_phen_a)!=row(comp_phen_a)])
-				comp_phen_p[,]=mean(comp_phen_p[col(comp_phen_p)!=row(comp_phen_p)])
-				diag(comp_phen_a)=1
-				diag(comp_phen_p)=1
-				A=rbind(cbind(-1*competition*comp_phen_p,m),cbind(t(m),-1*competition*comp_phen_a))
-				vec_stab=c()
-				for(it in 1:ncalc){vec_stab=c(vec_stab,Omega(A))}
-				ind$feas_comp=mean(vec_stab)
-				ind$feas_comp_se=sd(vec_stab)/sqrt(ncalc)
-
 				######################### CALCULATE FEASIBILITY WITH FEW DIFFERENT MEAN FIELDS
-				for(competition_feas in c(0.1,1,2,5)){
-					for(rho in c(0.01,0.05,0.2,0.4,0.6)){
+				for(competition_feas in competition){
+					for(rho in c(0.05,0.2,0.4)){
 						comp_a[,]=rho #mean(c(comp_p,comp_a))
 						comp_p[,]=rho #mean(c(comp_p,comp_a))
 						diag(comp_p)=1
@@ -284,10 +267,10 @@ for(competition in comp_vec){
 						A=rbind(cbind(-1*competition_feas*comp_phen_p,m),cbind(t(m),-1*competition_feas*comp_phen_a))
 						vec_stab=c()
 						for(it in 1:ncalc){vec_stab=c(vec_stab,Omega(A))}
-						ind$feas=mean(vec_stab)
-						ind$feas_se=sd(vec_stab)/sqrt(ncalc)
+						ind$feas_meanfield=mean(vec_stab)
+						ind$feas_meanfield_se=sd(vec_stab)/sqrt(ncalc)
 						ind$competition_feas=competition_feas
-						ind$rho=rho #mean(c(comp_p,comp_a)) 
+						ind$rho=rho 
 						indf=rbind(indf,ind)
 					}
 				}
@@ -298,6 +281,7 @@ for(competition in comp_vec){
 
 fwrite(indf,paste0("/home/duchenne/pheno/aggreg_simues_symmetric/networks_info_",ess,".csv"))
 #
+
  
 ###############################
 #################### AGGREGATE NETWORKS INFORMATION IN A UNIQUE TABLE
@@ -316,8 +300,7 @@ setwd(dir=path_folder)
 indf=NULL
 for(ess in 1:100){
 	ind=fread(paste0("data/simulated/outputs_simulations/results_community_level_each_replicate/networks_info_",ess,".csv"))
-	ind2=fread(paste0("data/simulated/outputs_simulations/results_community_level_each_replicate/networks_info_both_",ess,".csv"))
-	indf=rbind(indf,ind,ind2)
+	indf=rbind(indf,ind)
 }
 fwrite(indf,"data/simulated/outputs_simulations/networks_info.csv")
 
