@@ -16,29 +16,39 @@ weigthed.mean=function(x,y){sum(x*y,na.rm=T)/sum(y,na.rm=T)}
 
 ###### LOAD FLOWER COUNT:
 flowers=fread("data/empirical/interactions/flower_count.csv")
+flowers=subset(flowers,!is.na(Plant_species) & Plant_species!="sp") #remove unidentified species
 flowers$date=as.Date(paste(flowers$Day,flowers$Month,flowers$Year,sep="/"),format="%d/%m/%Y")
 flowers$jj=yday(flowers$date)
 tab=unique(flowers[,c("Site_ID")])
 
+flo=flowers[,c("date","Plant_gen_sp","Flower_abundance","Site_ID")]
+names(flo)[2:3]=c("species","count")
+flo$guild="plant"
+
 ###### LOAD INTERACTIONS:
-datf=as.data.frame(fread("BeeFun Master_inter.csv"))
+datf=as.data.frame(fread("data/empirical/interactions/BeeFun Master_inter.csv"))
 datf$Site_ID[datf$Site_ID=="Convento_de _la_luz"]="Convento_de_la_luz"
 datf$Site_ID[datf$Site_ID=="La_Rocina"]="La_rocina"
+datf=subset(datf,!is.na(Pollinator_species) & Pollinator_species!="sp") #remove unidentified species
 datf$date=as.Date(paste(datf$Day,datf$Month,datf$Year,sep="/"),format="%d/%m/%Y")
 datf$jj=yday(datf$date)
 
-#pheno plants:
-phenp=flowers %>% group_by(Plant_gen_sp) %>% summarise(mu=weigthed.mean(jj,Flower_abundance),sde=sqrt(Hmisc::wtd.var(jj,Flower_abundance)))
-phenp$sde[is.na(phenp$sde)]=1
-phenp$sde[phenp$sde==0]=1
-fwrite(phenp,"data/empirical/interactions/flower_pheno_empirical.csv")
+poll=datf[,c("date","Pollinator_gen_sp","Frequency","Site_ID")]
+names(poll)[2:3]=c("species","count")
+poll$guild="poll"
 
-#pheno poll:
-phena=datf %>% group_by(Pollinator_gen_sp) %>% summarise(mu=weigthed.mean(jj,Frequency),sde=sqrt(Hmisc::wtd.var(jj,Frequency)))
-phena=subset(phena,!is.na(mu))
-phena$sde[is.na(phena$sde)]=1
-phena$sde[phena$sde==0]=1
-fwrite(phena,"data/empirical/interactions/poll_pheno_empirical.csv")
+pheno_tab=rbind(flo,poll)
+
+fwrite(pheno_tab,"data/empirical/interactions/weekly_counts.csv")
+
+abund_counts=fread("data/empirical/interactions/weekly_counts.csv")
+abund_counts$jj=yday(as.Date(abund_counts$date,format="%d/%m/%Y")) #create a column 
+phen_est=abund_counts %>% group_by(species,guild) %>% summarise(mu=weigthed.mean(jj,count),sde=sqrt(Hmisc::wtd.var(jj,count)))
+phen_est=subset(phen_est,!is.na(mu))
+phen_est$sde[is.na(phen_est$sde)]=1
+phen_est$sde[phen_est$sde<1]=1
+phena=subset(phen_est,guild=="poll")
+phenp=subset(phen_est,guild=="plant")
 
 #mutualistic interactions
 sites=unique(datf$Site_ID)
@@ -47,11 +57,9 @@ weigthed.mean=function(x,y){sum(x*y,na.rm=T)/sum(y,na.rm=T)}
 empf=NULL
 networks=list()
 for (site in sites){
-
 bidon=subset(datf,Site_ID==site)
-bidon=subset(bidon,!is.na(Plant_genus) & Plant_genus!="" & Pollinator_genus!="")
-bidon=subset(bidon, Pollinator_gen_sp %in% phena$Pollinator_gen_sp)
-bidon=subset(bidon, Plant_gen_sp %in% phenp$Plant_gen_sp)
+bidon=subset(bidon, Pollinator_gen_sp %in% phena$species)
+bidon=subset(bidon, Plant_gen_sp %in% phenp$species)
 
 nsampl=length(unique(paste0(bidon$Round,bidon$Year)))
 
@@ -64,6 +72,7 @@ m=m[apply(m,1,sum)>0,apply(m,2,sum)>0]
 m=m/sqrt(matrix(apply(m,1,sum),ncol=1) %*% matrix(apply(m,2,sum),nrow=1))
 
 networks[[site]]=m
-}
 
+}
+names(networks)=sites
 save(networks, file = "data/empirical/interactions/matrices_empirical_networks.RData")

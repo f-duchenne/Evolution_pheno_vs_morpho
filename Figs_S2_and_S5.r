@@ -18,7 +18,7 @@ path_folder="C:/Users/Duchenne/Documents/evolution_pheno_morpho/data_zenodo/"
 setwd(dir=path_folder)
 
 ##################################### SPECIES LEVEL ########################
-datf=fread("data/simulated/outputs_simulations/species_level.csv")
+datf=fread("data/simulated/outputs_simulations/species_level_asym.csv")
 datf$type2="pheno"
 datf$type2[datf$type %in% c("mu2","sd2")]="morpho"
 datf$type2[datf$trait %in% c("morpho")]="morpho"

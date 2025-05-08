@@ -93,7 +93,7 @@
                             phen=1.0
                         end
                         competitor= @view m[:,v]
-                        similarity=mean(sqrt.(mut_interactions .* competitor))
+                        similarity=sum(mut_interactions .* competitor)/((sum(mut_interactions)+sum(competitor))/2)
                         comp_interactions[v]=phen.*similarity
                     end
                     return(comp_interactions)
@@ -133,7 +133,7 @@
                             phen=1.0
                         end
                         competitor = @view m[v,:]
-                        similarity=mean(sqrt.(mut_interactions .* competitor))
+                        similarity=sum(mut_interactions .* competitor)/((sum(mut_interactions)+sum(competitor))/2)
                         comp_interactions[v]=phen.*similarity
                     end
                     return(comp_interactions)
@@ -153,31 +153,12 @@
             end
             ### EVOLUTION
             ### PARTIAL DERIVATIVES FOR EVOLUTION
-            fit=funcdev(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)])
-            fitval=[funcdev(u[(i+nbsp_a+nbsp_p)]+epsilon,u[(i+nbsp_a*2+nbsp_p*2)]);funcdev(u[(i+nbsp_a+nbsp_p)]-epsilon,u[(i+nbsp_a*2+nbsp_p*2)])]
-            if(maximum(fitval)<=fit)
-                partial_dev_mu_phen =0
-            else
-                if fitval[1] .> fitval[2]
-                    partial_dev_mu_phen = epsilon
-                else
-                    partial_dev_mu_phen = -1 * epsilon
-                end
-            end
-            u2[(nbsp_a+nbsp_p+i)]=u[(nbsp_a+nbsp_p+i)] + partial_dev_mu_phen
+            eps_vec=[0.01;0;-0.01]
+            fitval=funcdev.(u[(i+nbsp_a+nbsp_p)].+eps_vec,u[(i+nbsp_a*2+nbsp_p*2)].+[0;0;0;])
+            u2[(nbsp_a+nbsp_p+i)]=u[(nbsp_a+nbsp_p+i)] + eps_vec[argmax(fitval)]
 
-            fit=funcdev(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)])
-            fitval=[funcdev(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)]+epsilon);funcdev(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)]-epsilon)]
-            if(maximum(fitval)<=fit)
-                partial_dev_sd_phen =0
-            else
-                if fitval[1] .> fitval[2]
-                    partial_dev_sd_phen = epsilon
-                else
-                    partial_dev_sd_phen = -1 * epsilon
-                end
-            end
-            u2[(nbsp_a*2+nbsp_p*2+i)]=u[(nbsp_a*2+nbsp_p*2+i)] + partial_dev_sd_phen
+            fitval=funcdev.(u[(i+nbsp_a+nbsp_p)].+[0;0;0;],u[(i+nbsp_a*2+nbsp_p*2)].+eps_vec)
+            u2[(nbsp_a*2+nbsp_p*2+i)]=u[(nbsp_a*2+nbsp_p*2+i)] +  eps_vec[argmax(fitval)]
 
         end
         u=copy(u2)

@@ -26,9 +26,8 @@ names(indf)[5]="wNODF"
 names(indf)[7]="mut.strength"
 indf$prop_motif=(indf$motifn/indf$motifntot)
 
-indf2=subset(indf,rho==0.05 & competition_feas==competition)
-acp=PCA(indf2[,1:7],graph=FALSE)
-indf2=cbind(indf2,acp$ind$coord)
+acp=PCA(indf[,1:7],graph=FALSE)
+indf2=cbind(indf,acp$ind$coord)
 indf2$comp=apply(indf2[,c("comp_a","comp_p")],1,mean)
 
 bidon=subset(indf2,time==0)
@@ -38,7 +37,7 @@ theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = e
 strip.background=element_rect(fill=NA,color=NA))+
 ylab("mutualism/competition in initial networks")+
 xlab("Importance of competition")+
-scale_color_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+labs(colour="Simulations with:")
+scale_color_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+labs(colour="Initial conditions with:")
 
 png("Figures/Fig_S1.png",width=1200,height=900,res=150)
 s1
@@ -56,7 +55,7 @@ facet_wrap(~competition,ncol=1)
 
 ############### FIGURE 2
 p1=ggplot()+
-stat_smooth(data=indf3,aes(y=mut.strength,x=time,color=trait,fill=trait,linetype=as.factor(rich),alpha=as.factor(competition)))+
+stat_smooth(data=indf3,aes(y=mut.strength,x=time,color=trait,fill=trait,linetype=as.factor(rich)))+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.border=element_blank(),
 panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.position="none",
 strip.background=element_rect(fill=NA,color=NA))+

@@ -39,7 +39,7 @@ final=data.frame(sp=c(paste0("a",1:nbsp_a),paste0("f",1:nbsp_p)),type=c(rep("pol
 sd_phen=sd_phen,mu_morpho=mu_morpho,sd_morpho=sd_morpho,rmax=rmax,K=K,Nini=Nini)
 final$random=i
 
-setwd(dir=paste0("C:/Users/Duchenne/Documents/evolution_pheno_morpho/initial"))
+setwd(dir=paste0("data/simulated/initial_conditions_simulations/"))
 fwrite(final,paste0("pops_ini_",i,".csv"))
 }
 
