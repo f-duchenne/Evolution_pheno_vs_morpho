@@ -3,7 +3,7 @@
 #' Check for packages and if necessary install into library 
 #+ message = FALSE
 rm(list=ls())
-pkgs <- c("data.table", "dplyr","ggplot2","bipartite","gridExtra","cowplot","ggpubr","scales","viridis","ggthemes") 
+pkgs <- c("data.table", "dplyr","ggplot2","bipartite","gridExtra","cowplot","ggpubr","scales","viridis","ggthemes","igraph","ggplotify") 
 
 inst <- pkgs %in% installed.packages()
 if (any(inst)) install.packages(pkgs[!inst])
@@ -27,8 +27,8 @@ motifs=NULL
 
 comp_vec=2
 time_vec=unique(datf$time)
-ess=1
-competition=6
+ess=10
+competition=4
 rich=20
 ti=2000
 ######### NETWORK COEVOLVED WITH PHENO ONLY
@@ -67,19 +67,21 @@ g=graph_from_data_frame(df,directed =FALSE)
 V(g)$type=TRUE
 V(g)$type[grep("H",V(g)$name)]=FALSE
 vec=rep(NA,length(vertex_attr(g,"name")))
-vec[]="forestgreen"
-vec[grep("H",vertex_attr(g,"name"))]="dodgerblue3"
+vec[]="black"
+vec[grep("H",vertex_attr(g,"name"))]="black"
 vertex_attr(g,"color")=vec
 edge_attr(g,"weight")=df$value
-E(g)$width <- (E(g)$weight^1)*10
+E(g)$width <- (E(g)$weight^(1/2))*10
 
+edge_attr(g,"color")=sapply(E(g)$weight,function(x){adjustcolor(paste0("gray",round(100-100*x/max(E(g)$weight))),alpha.f =max(0.1,x/max(E(g)$weight)))})
 
-edge_attr(g,"color")=sapply(E(g)$weight,function(x){adjustcolor(paste0("gray",round(100-100*x/max(E(g)$weight))),alpha.f =x/max(E(g)$weight))})
 size=3
+
 net=plot_grid(base2grob(~plot(g,layout = layout_as_bipartite,vertex.label=NA,vertex.size=size,label.cex=0,size2=size,curved=T)))+
 theme(plot.margin = unit(c(0,0,0,0), "cm"),plot.title=element_text(size=14,face="bold"))+ggtitle("b")
 
-
+net
+#
 ############# V MOTIFS:
 colo=c("forestgreen","dodgerblue3","cyan","magenta4")
 
@@ -142,4 +144,3 @@ pdf("Figures/Fig.1top.pdf",width=8,height=6)
 f1top
 dev.off();
 
-save(f1top,file="data/top_figure_1.RData")

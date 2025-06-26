@@ -17,48 +17,44 @@ invlogit1=function(x){return(80+205*exp(x)/(1+exp(x)))}
 
 liste = fread("data/empirical/initial_conditions_simulations/liste.csv")
 
-lili=list.files(path="data/empirical/outputs_simulations/results_for_each_individual_simulations/")
-
 competition=4
 
 datf=NULL
 for(ess in 1:10){
 	for(tr in c("both")){
 		for(jj in 1:nrow(liste)){
-			if(paste0("ueq_",liste$site[jj],"_comp_",competition,"_",tr,"_",ess,"_asym.csv") %in% lili){
 
-				dat=fread(paste0("data/empirical/outputs_simulations/results_for_each_individual_simulations/ueq_",liste$site[jj],"_comp_",competition,"_",tr,"_",ess,".csv"))
-				nbsp_a=liste$na[jj]
-				nbsp_p=liste$np[jj]
+			dat=fread(paste0("data/empirical/outputs_simulations/results_for_each_individual_simulations/ueq_",liste$site[jj],"_comp_",competition,"_",tr,"_",ess,".csv"))
+			nbsp_a=liste$na[jj]
+			nbsp_p=liste$np[jj]
 
-				dive=nbsp_a+nbsp_p
+			dive=nbsp_a+nbsp_p
 
-				if(tr=="both"){
-					names(dat)[1:(dive)]=paste0("mu_",1:dive)
-					names(dat)[(dive+1):(dive*2)]=paste0("sd_",1:dive)
-					names(dat)[(dive*2+1):(dive*3)]=paste0("mu2_",1:dive)
-					names(dat)[(dive*3+1):(dive*4)]=paste0("sd2_",1:dive)
-					names(dat)[(dive*4+1)]="time"
-				}else{
-					names(dat)[1:(dive)]=paste0("mu_",1:dive)
-					names(dat)[(dive+1):(dive*2)]=paste0("sd_",1:dive)
-					names(dat)[(dive*2+1)]="time"
-				}
-
-				dat2=melt(dat,id.vars=c("trait","time","competition"))
-				dat2$type="mu"
-				dat2$type[grep("mu2",dat2$variable)]="mu2"
-				dat2$type[grep("sd",dat2$variable)]="sd"
-				dat2$type[grep("sd2",dat2$variable)]="sd2"
-				dat2$species=gsub("mu2_","",gsub("mu_","",dat2$variable))
-				dat2$species=as.numeric(gsub("sd2_","",gsub("sd_","",dat2$species)))
-				dat2$species[dat2$species>(nbsp_a+nbsp_p)]=dat2$species[dat2$species>(nbsp_a+nbsp_p)]-(nbsp_a+nbsp_p)
-				dat2$comp=competition
-				dat2$essai=ess
-				dat2$site=liste$site[jj]
-				datf=rbind(datf,dat2)
-				}
+			if(tr=="both"){
+				names(dat)[1:(dive)]=paste0("mu_",1:dive)
+				names(dat)[(dive+1):(dive*2)]=paste0("sd_",1:dive)
+				names(dat)[(dive*2+1):(dive*3)]=paste0("mu2_",1:dive)
+				names(dat)[(dive*3+1):(dive*4)]=paste0("sd2_",1:dive)
+				names(dat)[(dive*4+1)]="time"
+			}else{
+				names(dat)[1:(dive)]=paste0("mu_",1:dive)
+				names(dat)[(dive+1):(dive*2)]=paste0("sd_",1:dive)
+				names(dat)[(dive*2+1)]="time"
 			}
+
+			dat2=melt(dat,id.vars=c("trait","time","competition"))
+			dat2$type="mu"
+			dat2$type[grep("mu2",dat2$variable)]="mu2"
+			dat2$type[grep("sd",dat2$variable)]="sd"
+			dat2$type[grep("sd2",dat2$variable)]="sd2"
+			dat2$species=gsub("mu2_","",gsub("mu_","",dat2$variable))
+			dat2$species=as.numeric(gsub("sd2_","",gsub("sd_","",dat2$species)))
+			dat2$species[dat2$species>(nbsp_a+nbsp_p)]=dat2$species[dat2$species>(nbsp_a+nbsp_p)]-(nbsp_a+nbsp_p)
+			dat2$comp=competition
+			dat2$essai=ess
+			dat2$site=liste$site[jj]
+			datf=rbind(datf,dat2)
+		}
 	}
 }
 fwrite(datf,"data/empirical/outputs_simulations/species_level_simues_empir.csv")
@@ -86,12 +82,10 @@ args_contents <- strsplit(args, ' ')
 jj <- as.numeric(args_contents[[1]])
 print(jj)
 
-datf = fread("/home/duchenne/pheno/species_level_simues_empir_alleg_asym.csv")
+datf = fread("/home/duchenne/pheno/species_level_simues_empir_alleg.csv")
 liste = fread("/home/duchenne/pheno/initial_empir/liste.csv")
 ncalc=10
 indf=NULL
-
-
 
 motifs=NULL
 for(ess in 1:10){
@@ -101,6 +95,7 @@ for(ess in 1:10){
 		for(tr in c("both")){
 			for(ti in c(0,2000)){
 				bidon=subset(datf,time==ti & trait==tr & essai==ess & site==liste$site[jj] & comp==competition)
+        if(nrow(bidon)>0){
 
 				#build interaction matrix:
 				#build interaction matrix:
@@ -152,15 +147,13 @@ for(ess in 1:10){
 					mu1=invlogit1(subset(bidon,type=="mu" & species==i)$value)
 					sd1=invlogit(subset(bidon,type=="sd" & species==i)$value)
 					for(j in 1:nbsp_a){
-						similarity=sum(m[,i] * m[,j])/sum(m[,i])
+						similarity=sum(m[,i] * m[,j])/((sum(m[,i])+sum(m[,j]))/2)
 						mu2=invlogit1(subset(bidon,type=="mu" & species==j)$value)
 						sd2=invlogit(subset(bidon,type=="sd" & species==j)$value)
 						f=function(x){pmin(dnorm(x,mu1,sd1),dnorm(x,mu2,sd2))}
 						phen=sum(f(seq(0,365,0.1)))*0.1
 						phen_a[i,j]=phen
-						phen_a[j,i]=phen
 						comp_a[i,j]=ifelse(tr %in% c("pheno","both"),phen*similarity,similarity)
-						comp_a[j,i]=ifelse(tr %in% c("pheno","both"),phen*similarity,similarity)
 					}  
 				}
 				diag(comp_a)=1
@@ -173,7 +166,7 @@ for(ess in 1:10){
 					mu1=invlogit1(subset(bidon,type=="mu" & species==(i+nbsp_a))$value)
 					sd1=invlogit(subset(bidon,type=="sd" & species==(i+nbsp_a))$value)
 					for(j in 1:(nbsp_p)){
-						similarity=sum(t(m)[,i] * t(m)[,j])/sum(t(m)[,i])
+						similarity=sum(t(m)[,i] * t(m)[,j])/((sum(t(m)[,i])+sum(t(m)[,j]))/2)
 						mu2=invlogit1(subset(bidon,type=="mu" & species==(j+nbsp_a))$value)
 						sd2=invlogit(subset(bidon,type=="sd" & species==(j+nbsp_a))$value)
 						f=function(x){pmin(dnorm(x,mu1,sd1),dnorm(x,mu2,sd2))}
@@ -221,17 +214,14 @@ for(ess in 1:10){
 				ind$feas_with_pheno_se=sd(vec_stab)/sqrt(ncalc)
 				ind$competition=competition
 				indf=rbind(indf,ind)
+        }
 			}
 		}
 	}
 }
 
-
-
-
 fwrite(indf,paste0("/home/duchenne/pheno/networks_info_empir_",jj,".csv"))
 #
-
 #################################################
 #' Check for packages and if necessary install into library 
 #+ message = FALSE

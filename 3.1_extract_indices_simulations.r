@@ -14,9 +14,6 @@ setwd(dir=path_folder)
 
 
 
-lili=list.files(path="data/simulated/outputs_simulations/results_for_each_individual_simulations/")
-
-
 comp_vec=c(2,4,6)
 time_vec=plyr::round_any(seq(sqrt(0),sqrt(2000),length.out=10)^2,10)
 
@@ -25,27 +22,25 @@ datf=NULL
 for(competition in comp_vec){
 	for (rich in c(10,20,30)){
 		for(i in 1:100){
-			if(paste0("ueq_both_",i,"_",rich,"_",competition,"_asym.csv") %in% lili){
-				dat=fread(paste0("data/simulated/outputs_simulations/results_for_each_individual_simulations/ueq_both_",i,"_",rich,"_",competition,".csv"))
-				dive=rich*2
-				names(dat)[1:(dive)]=paste0("mu_",1:dive)
-				names(dat)[(dive+1):(dive*2)]=paste0("sd_",1:dive)
-				names(dat)[(dive*2+1):(dive*3)]=paste0("mu2_",1:dive)
-				names(dat)[(dive*3+1):(dive*4)]=paste0("sd2_",1:dive)
-				names(dat)[(dive*4+1)]="time"
+			dat=fread(paste0("data/simulated/outputs_simulations/results_for_each_individual_simulations/ueq_both_",i,"_",rich,"_",competition,".csv"))
+			dive=rich*2
+			names(dat)[1:(dive)]=paste0("mu_",1:dive)
+			names(dat)[(dive+1):(dive*2)]=paste0("sd_",1:dive)
+			names(dat)[(dive*2+1):(dive*3)]=paste0("mu2_",1:dive)
+			names(dat)[(dive*3+1):(dive*4)]=paste0("sd2_",1:dive)
+			names(dat)[(dive*4+1)]="time"
 
-				dat2=melt(dat,id.vars=c("trait","time"))
-				dat2$type="mu"
-				dat2$type[grep("mu2",dat2$variable)]="mu2"
-				dat2$type[grep("sd",dat2$variable)]="sd"
-				dat2$type[grep("sd2",dat2$variable)]="sd2"
-				dat2$species=gsub("mu2_","",gsub("mu_","",dat2$variable))
-				dat2$species=as.numeric(gsub("sd2_","",gsub("sd_","",dat2$species)))
-				dat2$comp=competition
-				dat2$essai=i
-				dat2$rich=rich
-				datf=rbind(datf,dat2)
-			}
+			dat2=melt(dat,id.vars=c("trait","time"))
+			dat2$type="mu"
+			dat2$type[grep("mu2",dat2$variable)]="mu2"
+			dat2$type[grep("sd",dat2$variable)]="sd"
+			dat2$type[grep("sd2",dat2$variable)]="sd2"
+			dat2$species=gsub("mu2_","",gsub("mu_","",dat2$variable))
+			dat2$species=as.numeric(gsub("sd2_","",gsub("sd_","",dat2$species)))
+			dat2$comp=competition
+			dat2$essai=i
+			dat2$rich=rich
+			datf=rbind(datf,dat2)
 		}
 	}
 }
@@ -104,6 +99,7 @@ datf$type="mu"
 datf$type[grep("mu2",datf$variable)]="mu2"
 datf$type[grep("sd",datf$variable)]="sd"
 datf$type[grep("sd2",datf$variable)]="sd2"
+
 
 ncalc=10
 indf=NULL
@@ -165,7 +161,7 @@ for(competition in comp_vec){
 					mu1=invlogit1(subset(bidon,type=="mu" & species==i)$value)
 					sd1=invlogit(subset(bidon,type=="sd" & species==i)$value)
 					for(j in 1:(rich)){
-						similarity=sum(m[,i] * m[,j])/sum(m[,i])
+						similarity=sum(m[,i] * m[,j])/((sum(m[,i])+sum(m[,j]))/2)
 						mu2=invlogit1(subset(bidon,type=="mu" & species==j)$value)
 						sd2=invlogit(subset(bidon,type=="sd" & species==j)$value)
 						f=function(x){pmin(dnorm(x,mu1,sd1),dnorm(x,mu2,sd2))}
@@ -184,7 +180,7 @@ for(competition in comp_vec){
 					mu1=invlogit1(subset(bidon,type=="mu" & species==(i+rich))$value)
 					sd1=invlogit(subset(bidon,type=="sd" & species==(i+rich))$value)
 					for(j in 1:(rich)){
-						similarity=sum(t(m)[,i] * t(m)[,j])/sum(t(m)[,i])
+						similarity=sum(t(m)[,i] * t(m)[,j])/((sum(t(m)[,i])+sum(t(m)[,j]))/2)
 						mu2=invlogit1(subset(bidon,type=="mu" & species==(j+rich))$value)
 						sd2=invlogit(subset(bidon,type=="sd" & species==(j+rich))$value)
 						f=function(x){pmin(dnorm(x,mu1,sd1),dnorm(x,mu2,sd2))}
@@ -239,7 +235,7 @@ for(competition in comp_vec){
 				}
 				diag(comp_phen_p)=1
         
-				ind$comp_a=mean(comp_phen_a[col(comp_phen_a)!=row(comp_phen_a)])
+        ind$comp_a=mean(comp_phen_a[col(comp_phen_a)!=row(comp_phen_a)])
 				ind$comp_p=mean(comp_phen_p[col(comp_phen_p)!=row(comp_phen_p)])
         
 				A=rbind(cbind(-1*competition*comp_phen_p,m),cbind(t(m),-1*competition*comp_phen_a))
@@ -247,37 +243,8 @@ for(competition in comp_vec){
 				for(it in 1:ncalc){vec_stab=c(vec_stab,Omega(A))}
 				ind$feas_structure=mean(vec_stab)
 				ind$feas_structure_se=sd(vec_stab)/sqrt(ncalc)
-
-				######################### CALCULATE FEASIBILITY WITH FEW DIFFERENT MEAN FIELDS
-				for(competition_feas in competition){
-					for(rho in c(0.05,0.2,0.4)){
-						comp_a[,]=rho #mean(c(comp_p,comp_a))
-						comp_p[,]=rho #mean(c(comp_p,comp_a))
-						diag(comp_p)=1
-						diag(comp_a)=1
-						if(tr=="morpho"){
-						comp_phen_a=comp_a
-						}else{
-						comp_phen_a=comp_a*phen_a
-						}
-						diag(comp_phen_a)=1
-						if(tr=="morpho"){
-						comp_phen_p=comp_p
-						}else{
-						comp_phen_p=comp_p*phen_p
-						}
-						diag(comp_phen_p)=1
-
-						A=rbind(cbind(-1*competition_feas*comp_phen_p,m),cbind(t(m),-1*competition_feas*comp_phen_a))
-						vec_stab=c()
-						for(it in 1:ncalc){vec_stab=c(vec_stab,Omega(A))}
-						ind$feas_meanfield=mean(vec_stab)
-						ind$feas_meanfield_se=sd(vec_stab)/sqrt(ncalc)
-						ind$competition_feas=competition_feas
-						ind$rho=rho 
-						indf=rbind(indf,ind)
-					}
-				}
+        indf=rbind(indf,ind)
+        
 			}
 		}
 	}
@@ -299,15 +266,11 @@ pkg.out <- lapply(pkgs, require, character.only = TRUE)
 path_folder="C:/Users/Duchenne/Documents/evolution_pheno_morpho/data_zenodo/"
 setwd(dir=path_folder)
 
-lili=list.files(path="data/simulated/outputs_simulations/results_community_level_each_replicate/")
-
 indf=NULL
 for(ess in 1:100){
-if(paste0("networks_info_",ess,"_asym.csv") %in% lili){
-	ind=fread(paste0("data/simulated/outputs_simulations/results_community_level_each_replicate/networks_info_",ess,"_asym.csv"))
+	ind=fread(paste0("data/simulated/outputs_simulations/results_community_level_each_replicate/networks_info_",ess,".csv"))
 	indf=rbind(indf,ind)
-	}
 }
-fwrite(indf,"data/simulated/outputs_simulations/networks_info_asym.csv")
+fwrite(indf,"data/simulated/outputs_simulations/networks_info.csv")
 
 

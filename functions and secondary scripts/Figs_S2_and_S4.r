@@ -18,7 +18,7 @@ path_folder="C:/Users/Duchenne/Documents/evolution_pheno_morpho/data_zenodo/"
 setwd(dir=path_folder)
 
 ##################################### SPECIES LEVEL ########################
-datf=fread("data/simulated/outputs_simulations/species_level_asym.csv")
+datf=fread("data/simulated/outputs_simulations/species_level.csv")
 datf$type2="pheno"
 datf$type2[datf$type %in% c("mu2","sd2")]="morpho"
 datf$type2[datf$trait %in% c("morpho")]="morpho"
@@ -78,6 +78,11 @@ scale_y_continuous(n.breaks=3)
 
 plot_grid(sp1,sp2,ncol=1,align="hv")
 
-png("Figures/Fig_S5.png",width=1200,height=1600,res=150)
+png("Figures/Fig_S4.png",width=1200,height=1600,res=150)
 plot_grid(sp1,sp2,ncol=1,align="hv")
 dev.off();
+
+
+
+biche=dcast(endpo,trait+time+comp+essai+species+type2+rich~type3,value.var="value")
+ggplot(data=biche,aes(x=invlogit1(mu),y=invlogit(sd),color=type2))+geom_point()+facet_wrap(~trait+comp+rich)

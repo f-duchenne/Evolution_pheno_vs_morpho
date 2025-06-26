@@ -26,9 +26,8 @@ names(indf)[5]="wNODF"
 names(indf)[7]="mut.strength"
 indf$prop_motif=(indf$motifn/indf$motifntot)
 
-indf2=subset(indf,rho==0.05 & competition_feas==competition)
-acp=PCA(indf2[,1:7],graph=FALSE)
-indf2=cbind(indf2,acp$ind$coord)
+acp=PCA(indf[,1:7],graph=FALSE)
+indf2=cbind(indf,acp$ind$coord)
 indf2$comp=apply(indf2[,c("comp_a","comp_p")],1,mean)
 
 indf3=subset(indf2,competition %in% c(4))

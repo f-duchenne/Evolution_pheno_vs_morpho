@@ -44,6 +44,7 @@ s1
 dev.off();
 
 indf3=subset(indf2,competition %in% c(2,6))
+indf3=indf3[order(indf3$time),]
 
 indfspeed=indf3 %>% group_by(trait,competition,essai,rich) %>% mutate(speed=sqrt((Dim.1-lag(Dim.1))^2+(Dim.2-lag(Dim.2))^2+(Dim.3-lag(Dim.3))^2)/(time-lag(time)))
 
@@ -176,7 +177,7 @@ ylab(paste0("Dimension 2 (",round(acp$eig[2,2],digits=1)," %)"))+
 scale_color_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+
 scale_fill_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+labs(colour="Simulations with:",fill="Simulations with:")
 
-png("Figures/Fig_S4.png",width=1200,height=1000,res=150)
+png("Figures/Fig_S5.png",width=1200,height=1000,res=150)
 pl3b
 dev.off();
 
@@ -208,7 +209,7 @@ dev.off();
 #Diversity-stability trade-off
 indf5=subset(indf2,time %in% c(0,2000) & competition %in% c(4,6))
 indf5$trait=factor(indf5$trait,labels=c("both traits","only morpho","only pheno"))
-indf5=indf5 %>% group_by(trait,essai,rho,competition,competition_feas,time) %>% mutate(feas_ini=feas_structure[rich==10])  
+indf5=indf5 %>% group_by(trait,essai,competition,time) %>% mutate(feas_ini=feas_structure[rich==10])  
 indf5$time2=factor(indf5$time,labels=c("initial (t = 0)","coevolved (t = 2000)"))
 indf5$time2=factor(indf5$time2,levels=c("coevolved (t = 2000)","initial (t = 0)"))
 
