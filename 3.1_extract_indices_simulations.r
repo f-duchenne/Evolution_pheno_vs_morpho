@@ -15,7 +15,7 @@ setwd(dir=path_folder)
 
 
 comp_vec=c(2,4,6)
-time_vec=plyr::round_any(seq(sqrt(0),sqrt(2000),length.out=10)^2,10)
+time_vec=plyr::round_any(seq(sqrt(0),sqrt(5000),length.out=10)^2,10)
 
 ##### AGGREGATE SIMULATIONS WITH TWO TRAITS
 datf=NULL
@@ -109,10 +109,10 @@ comp_vec=c(2,4,6)
 time_vec=unique(datf$time)
 
 for(competition in comp_vec){
-	for (rich in c(10,20,30)){
+	for (riche in c(10,20,30)){
 		for(tr in c("pheno","morpho","both")){
 			for(ti in time_vec){
-				bidon=subset(datf,essai==ess & time==ti & trait==tr & rich==rich & comp==competition)
+				bidon=subset(datf,essai==ess & time==ti & trait==tr & rich==riche & comp==competition)
 
 				#build interaction matrix:
 				m = matrix(NA, rich, rich)
@@ -235,7 +235,7 @@ for(competition in comp_vec){
 				}
 				diag(comp_phen_p)=1
         
-        ind$comp_a=mean(comp_phen_a[col(comp_phen_a)!=row(comp_phen_a)])
+                ind$comp_a=mean(comp_phen_a[col(comp_phen_a)!=row(comp_phen_a)])
 				ind$comp_p=mean(comp_phen_p[col(comp_phen_p)!=row(comp_phen_p)])
         
 				A=rbind(cbind(-1*competition*comp_phen_p,m),cbind(t(m),-1*competition*comp_phen_a))

@@ -18,8 +18,8 @@ println("essai",jj)
 include("/home/duchenne/pheno/derivatives_function_pheno_and_morpho.jl")
 const alpha=1.0
 const r=0
-const epsilon=0.01
-const tf=2000
+const epsilon=0.1
+const tf=5000
 
 function simue(pini)
     alpha,r,epsilon,df,dive,competition,tf = pini

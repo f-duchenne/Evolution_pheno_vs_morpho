@@ -93,14 +93,19 @@
                             phen=1.0
                         end
                         competitor= @view m[:,v]
-                        similarity=sum(mut_interactions .* competitor)/((sum(mut_interactions)+sum(competitor))/2)
+                        denominator=(sum(mut_interactions)+sum(competitor))/2
+                        if denominator==0
+                            similarity=0
+                        else
+                            similarity=sum(mut_interactions .* competitor)/((sum(mut_interactions)+sum(competitor))/2)
+                        end
                         comp_interactions[v]=phen.*similarity
                     end
                     return(comp_interactions)
                 end
                 comp_interactions = comp_inter_a(p3)
                 comp_interactions[i,] = 1.0
-                d_pop= r .+ alpha*sum(mut_interactions .* abund_flower) .- competition*sum(comp_interactions .* abund_poll)
+                d_pop= alpha*sum(mut_interactions .* abund_flower) .- competition*sum(comp_interactions .* abund_poll)
                 return d_pop
             end
 
@@ -133,14 +138,19 @@
                             phen=1.0
                         end
                         competitor = @view m[v,:]
-                        similarity=sum(mut_interactions .* competitor)/((sum(mut_interactions)+sum(competitor))/2)
+                        denominator=(sum(mut_interactions)+sum(competitor))/2
+                        if denominator==0
+                            similarity=0
+                        else
+                            similarity=sum(mut_interactions .* competitor)/((sum(mut_interactions)+sum(competitor))/2)
+                        end
                         comp_interactions[v]=phen.*similarity
                     end
                     return(comp_interactions)
                 end
                 comp_interactions= comp_inter_p(p2)
                 comp_interactions[(i-nbsp_a),] = 1.0
-                d_pop= r .+ alpha*sum(mut_interactions .* abund_poll) .- competition*sum(comp_interactions .* abund_flower)
+                d_pop= alpha*sum(mut_interactions .* abund_poll) .- competition*sum(comp_interactions .* abund_flower)
                 return d_pop
             end
 
@@ -153,12 +163,21 @@
             end
             ### EVOLUTION
             ### PARTIAL DERIVATIVES FOR EVOLUTION
-            eps_vec=[0.01;0;-0.01]
-            fitval=funcdev.(u[(i+nbsp_a+nbsp_p)].+eps_vec,u[(i+nbsp_a*2+nbsp_p*2)].+[0;0;0;])
-            u2[(nbsp_a+nbsp_p+i)]=u[(nbsp_a+nbsp_p+i)] + eps_vec[argmax(fitval)]
+            original_fit=funcdev.(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)])
+            resolution=0.01
+            # MU EVOL
+            fitdev=(funcdev.(u[(i+nbsp_a+nbsp_p)]+resolution,u[(i+nbsp_a*2+nbsp_p*2)])-original_fit)/resolution
+            if abs(fitdev)>1
+                fitdev=1*sign(fitdev)
+            end
+            u2[(nbsp_a+nbsp_p+i)]=u[(nbsp_a+nbsp_p+i)] + epsilon*fitdev
 
-            fitval=funcdev.(u[(i+nbsp_a+nbsp_p)].+[0;0;0;],u[(i+nbsp_a*2+nbsp_p*2)].+eps_vec)
-            u2[(nbsp_a*2+nbsp_p*2+i)]=u[(nbsp_a*2+nbsp_p*2+i)] +  eps_vec[argmax(fitval)]
+            #SD EVOL
+            fitdev=(funcdev.(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)]+resolution)-original_fit)/resolution
+            if abs(fitdev)>1
+                fitdev=1*sign(fitdev)
+            end
+            u2[(nbsp_a*2+nbsp_p*2+i)]=u[(nbsp_a*2+nbsp_p*2+i)] +  epsilon*fitdev
 
         end
         u=copy(u2)

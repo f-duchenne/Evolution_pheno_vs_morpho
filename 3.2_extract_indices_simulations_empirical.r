@@ -58,7 +58,7 @@ for(ess in 1:10){
 	}
 }
 fwrite(datf,"data/empirical/outputs_simulations/species_level_simues_empir.csv")
-datf_alleg=datf[datf$time %in% c(0,2000),]
+datf_alleg=datf[datf$time %in% c(0,1000,2000,3000,4000,5000),]
 fwrite(datf_alleg,"data/empirical/outputs_simulations/species_level_simues_empir_alleg.csv")
 
 ###########################################  EXTRACT INDICES AND EXPORT INFORMATION AT COMMUNITY LEVEL FOR EACH SITE

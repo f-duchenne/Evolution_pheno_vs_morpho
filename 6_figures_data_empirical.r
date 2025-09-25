@@ -32,17 +32,32 @@ names(indf)[3]="inter. evenness"
 names(indf)[5]="wNODF"
 names(indf)[7]="mut.strength"
 names(indf)[11:12]=c("na","np")
-indf$dive=indf$nbsp_a+indf$nbsp_p 
+indf$dive=indf$na+indf$np 
 indf$prop_motif=(indf$motifn/indf$motifntot)
 
 
-bidon=subset(indf,time==2000)
+bidon=subset(indf,time==5000)
 mean(bidon$comp/bidon$mut.strength)
+
+## SMALL model on simulations:
+model=glm(feas_with_pheno~dive*as.factor(time),family=quasibinomial,data=indf)
+car::Anova(model)
+
+b=ggpredict(model,c("dive","time"))
+
+ggplot()+
+geom_boxplot(data=subset(indf,trait=="both" & competition==4),aes(y=motifn/motifntot,x=as.factor(time)),color=colo[1])+
+theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.border=element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.position="none",
+axis.title.x=element_blank(),
+axis.text.x = element_text(angle = 45, hjust=1),
+strip.background=element_rect(fill=NA,color=NA))+
+ggtitle("a")+
+ylab('Percentage of "V+" motifs')+scale_y_continuous(labels=scales::percent)
 
 ### PROPORTION OF V+ MOTIFS
 pl1=ggplot()+
 geom_boxplot(data=subset(empf,competition==4),aes(x="Empirical",y=motifn/motifntot))+
-geom_boxplot(data=subset(indf,time==2000 & trait=="both" & competition==4),aes(y=motifn/motifntot,x="Simulated\nCoevolved"),color=colo[1])+
+geom_boxplot(data=subset(indf,time==5000 & trait=="both" & competition==4),aes(y=motifn/motifntot,x="Simulated\nCoevolved"),color=colo[1])+
 geom_boxplot(data=subset(indf,time==0 & trait=="both" & competition==4),aes(y=motifn/motifntot,x="Simulated\nInitial"),color="grey")+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.border=element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.position="none",
 axis.title.x=element_blank(),

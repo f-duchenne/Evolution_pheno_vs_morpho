@@ -1,4 +1,4 @@
-@inbounds function mDerivative2(uinit,p,t)
+@inbounds function mDerivative2_dis(uinit,p,t)
     nbsp_a,nbsp_p,epsilon,alpha,competition,r = p
     result = Array{Float64}(undef, t+1, length(uinit)+1)
     result[1,:]=[uinit;0;]
@@ -34,13 +34,13 @@
         #Defining some shorcuts
         #pheno
         mu_phen_a = invlogit1.(u[(1+nbsp_a+nbsp_p):(nbsp_a*2+nbsp_p)])
-        sd_phen_a = invlogit.(u[(1+nbsp_a*2+nbsp_p*2):(nbsp_a*3+nbsp_p*2)])
         mu_phen_p =invlogit1.(u[(1+nbsp_a*2+nbsp_p):(nbsp_a*2+nbsp_p*2)])
+        sd_phen_a = invlogit.(u[(1+nbsp_a*2+nbsp_p*2):(nbsp_a*3+nbsp_p*2)])
         sd_phen_p = invlogit.(u[(1+nbsp_a*3+nbsp_p*2):(nbsp_a*3+nbsp_p*3)])
         #morpho
         mu_morpho_a = invlogit1.(u[(1+nbsp_a*3+nbsp_p*3):(nbsp_a*4+nbsp_p*3)])
-        sd_morpho_a = invlogit.(u[(1+nbsp_a*4+nbsp_p*4):(nbsp_a*5+nbsp_p*4)])
         mu_morpho_p =invlogit1.(u[(1+nbsp_a*3+nbsp_p*3):(nbsp_a*4+nbsp_p*4)])
+        sd_morpho_a = invlogit.(u[(1+nbsp_a*4+nbsp_p*4):(nbsp_a*5+nbsp_p*4)])
         sd_morpho_p = invlogit.(u[(1+nbsp_a*5+nbsp_p*4):(nbsp_a*5+nbsp_p*5)])
         #abundances
         abund_poll= @view u[1:nbsp_a]
@@ -102,14 +102,14 @@
                         sd2= @view sd_phen_a[v]
                         phen=quadgk(theta -> inte.(theta,invlogit1.(x),invlogit.(y),mu2,sd2), 0, 365, rtol=1e-6)[1]
                         competitor= @view m[:,v]
-                        similarity=sum(mut_interactions .* competitor)/sum(mut_interactions)
+                        similarity=sum(mut_interactions .* competitor)/((sum(mut_interactions)+sum(competitor))/2)
                         comp_interactions[v]=phen.*similarity
                     end
                     return(comp_interactions)
                 end
                 comp_interactions = comp_inter_a(p3)
                 comp_interactions[i,] = 1.0
-                d_pop= r .+ alpha*sum(mut_interactions .* abund_flower) .- competition*sum(comp_interactions .* abund_poll)
+                d_pop= alpha*sum(mut_interactions .* abund_flower) .- competition*sum(comp_interactions .* abund_poll)
                 return d_pop
             end
 
@@ -141,14 +141,14 @@
                         sd2= @view sd_phen_p[v]
                         phen=quadgk(theta -> inte.(theta,invlogit1.(x),invlogit.(y),mu2,sd2), 0, 365, rtol=1e-6)[1]
                         competitor= @view m[v,:]
-                        similarity=sum(mut_interactions .* competitor)/sum(mut_interactions)
+                        similarity=sum(mut_interactions .* competitor)/((sum(mut_interactions)+sum(competitor))/2)
                         comp_interactions[v]=phen.*similarity
                     end
                     return(comp_interactions)
                 end
                 comp_interactions= comp_inter_p(p2)
                 comp_interactions[(i-nbsp_a),] = 1.0
-                d_pop= r .+ alpha*sum(mut_interactions .* abund_poll) .- competition*sum(comp_interactions .* abund_flower)
+                d_pop= alpha*sum(mut_interactions .* abund_poll) .- competition*sum(comp_interactions .* abund_flower)
                 return d_pop
             end
 
@@ -159,67 +159,28 @@
             else#if plant
                 funcdev=pop_derivative_p
             end
-            #### EVOLUTION
+#### EVOLUTION
             ### PARTIAL DERIVATIVES FOR EVOLUTION
             #PHENO MU EVOL
-            fit=funcdev(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)],u[(i+nbsp_a*3+nbsp_p*3)],u[(i+nbsp_a*4+nbsp_p*4)])
-            fitval=[funcdev(u[(i+nbsp_a+nbsp_p)]+epsilon,u[(i+nbsp_a*2+nbsp_p*2)],u[(i+nbsp_a*3+nbsp_p*3)],u[(i+nbsp_a*4+nbsp_p*4)]);funcdev(u[(i+nbsp_a+nbsp_p)]-epsilon,u[(i+nbsp_a*2+nbsp_p*2)],u[(i+nbsp_a*3+nbsp_p*3)],u[(i+nbsp_a*4+nbsp_p*4)])]
-            if maximum(fitval)<=fit
-                partial_dev_mu_phen =0
-            else
-                if fitval[1] .> fitval[2]
-                    partial_dev_mu_phen = epsilon
-                else
-                    partial_dev_mu_phen = -1 * epsilon
-                end
-            end
-            u2[(nbsp_a+nbsp_p+i)]=u[(nbsp_a+nbsp_p+i)] + partial_dev_mu_phen
+            eps_vec=[0.01;0;-0.01]
+            fitval=funcdev.(u[(i+nbsp_a+nbsp_p)].+eps_vec,u[(i+nbsp_a*2+nbsp_p*2)].+[0;0;0;],u[(i+nbsp_a*3+nbsp_p*3)].+[0;0;0;],u[(i+nbsp_a*4+nbsp_p*4)].+[0;0;0;])
+            u2[(nbsp_a+nbsp_p+i)]=u[(nbsp_a+nbsp_p+i)] + eps_vec[argmax(fitval)]
 
             #PHENO SD EVOL
-            fit=funcdev(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)],u[(i+nbsp_a*3+nbsp_p*3)],u[(i+nbsp_a*4+nbsp_p*4)])
-            fitval=[funcdev(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)]+epsilon,u[(i+nbsp_a*3+nbsp_p*3)],u[(i+nbsp_a*4+nbsp_p*4)]);funcdev(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)]-epsilon,u[(i+nbsp_a*3+nbsp_p*3)],u[(i+nbsp_a*4+nbsp_p*4)])]
-            if maximum(fitval)<=fit
-                partial_dev_sd_phen =0
-            else
-                if fitval[1] .> fitval[2]
-                    partial_dev_sd_phen = epsilon
-                else
-                    partial_dev_sd_phen = -1 * epsilon
-                end
-            end
-            u2[(nbsp_a*2+nbsp_p*2+i)]=u[(nbsp_a*2+nbsp_p*2+i)] + partial_dev_sd_phen
+            fitval=funcdev.(u[(i+nbsp_a+nbsp_p)].+[0;0;0;],u[(i+nbsp_a*2+nbsp_p*2)].+eps_vec,u[(i+nbsp_a*3+nbsp_p*3)].+[0;0;0;],u[(i+nbsp_a*4+nbsp_p*4)].+[0;0;0;])
+            u2[(nbsp_a*2+nbsp_p*2+i)]=u[(nbsp_a*2+nbsp_p*2+i)] + eps_vec[argmax(fitval)]
 
             #MORPHO MU EVOL
-            fit=funcdev(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)],u[(i+nbsp_a*3+nbsp_p*3)],u[(i+nbsp_a*4+nbsp_p*4)])
-            fitval=[funcdev(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)],u[(i+nbsp_a*3+nbsp_p*3)]+epsilon,u[(i+nbsp_a*4+nbsp_p*4)]);funcdev(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)],u[(i+nbsp_a*3+nbsp_p*3)]-epsilon,u[(i+nbsp_a*4+nbsp_p*4)])]
-            if maximum(fitval)<=fit
-                partial_dev_mu_morpho =0
-            else
-                if fitval[1] .> fitval[2]
-                    partial_dev_mu_morpho = epsilon
-                else
-                    partial_dev_mu_morpho = -1 * epsilon
-                end
-            end
-            u2[(nbsp_a*3+nbsp_p*3+i)]=u[(nbsp_a*3+nbsp_p*3+i)] + partial_dev_mu_morpho
+            fitval=funcdev.(u[(i+nbsp_a+nbsp_p)].+[0;0;0;],u[(i+nbsp_a*2+nbsp_p*2)].+[0;0;0;],u[(i+nbsp_a*3+nbsp_p*3)].+eps_vec,u[(i+nbsp_a*4+nbsp_p*4)].+[0;0;0;])
+            u2[(nbsp_a*3+nbsp_p*3+i)]=u[(nbsp_a*3+nbsp_p*3+i)] + eps_vec[argmax(fitval)]
 
             #MORPHO SD EVOL
-            fit=funcdev(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)],u[(i+nbsp_a*3+nbsp_p*3)],u[(i+nbsp_a*4+nbsp_p*4)])
-            fitval=[funcdev(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)],u[(i+nbsp_a*3+nbsp_p*3)],u[(i+nbsp_a*4+nbsp_p*4)]+epsilon);funcdev(u[(i+nbsp_a+nbsp_p)],u[(i+nbsp_a*2+nbsp_p*2)],u[(i+nbsp_a*3+nbsp_p*3)],u[(i+nbsp_a*4+nbsp_p*4)]-epsilon)]
-            if maximum(fitval)<=fit
-                partial_dev_sd_morpho =0
-            else
-                if fitval[1] .> fitval[2]
-                    partial_dev_sd_morpho = epsilon
-                else
-                    partial_dev_sd_morpho = -1 * epsilon
-                end
-            end
-            u2[(nbsp_a*4+nbsp_p*4+i)]=u[(nbsp_a*4+nbsp_p*4+i)] + partial_dev_sd_morpho
+            fitval=funcdev.(u[(i+nbsp_a+nbsp_p)].+[0;0;0;],u[(i+nbsp_a*2+nbsp_p*2)].+[0;0;0;],u[(i+nbsp_a*3+nbsp_p*3)].+[0;0;0;],u[(i+nbsp_a*4+nbsp_p*4)].+eps_vec)
+            u2[(nbsp_a*4+nbsp_p*4+i)]=u[(nbsp_a*4+nbsp_p*4+i)] + eps_vec[argmax(fitval)]
 
         end
         u=copy(u2)
         result[(ti+1),:]=[u2;ti;]
     end
-    return result[1:10:end,1:end]
+    return result[1:1:end,1:end]
 end

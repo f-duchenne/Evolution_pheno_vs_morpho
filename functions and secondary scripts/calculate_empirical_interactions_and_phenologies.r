@@ -26,7 +26,7 @@ names(flo)[2:3]=c("species","count")
 flo$guild="plant"
 
 ###### LOAD INTERACTIONS:
-datf=as.data.frame(fread("data/empirical/interactions/BeeFun Master_inter.csv"))
+datf=as.data.frame(fread("C:/Users/Duchenne/Documents/evolution_pheno_morpho/BeeFun Master_inter.csv"))
 datf$Site_ID[datf$Site_ID=="Convento_de _la_luz"]="Convento_de_la_luz"
 datf$Site_ID[datf$Site_ID=="La_Rocina"]="La_rocina"
 datf=subset(datf,!is.na(Pollinator_species) & Pollinator_species!="sp") #remove unidentified species
