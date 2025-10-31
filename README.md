@@ -6,7 +6,7 @@ The folder "functions and secondary scripts" contains some functions that are ca
 
 ### Initial conditions
 
-Scripts 1 & 1bis defined initial conditions for theoretical and empirical communities, respectively, to allows the reproducibility of the simulations.
+Scripts 1.1 & 1.2 defined initial conditions for theoretical and empirical communities, respectively, to allows the reproducibility of the simulations.
 
 ### Simulations under Julia
 
