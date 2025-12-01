@@ -1,4 +1,4 @@
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13270452.svg)](https://doi.org/10.5281/zenodo.17772148)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13270452.svg)](https://doi.org/10.5281/zenodo.17779432)
 
 This folder contains all the main script used to reproduce simulations and analyses.
 
