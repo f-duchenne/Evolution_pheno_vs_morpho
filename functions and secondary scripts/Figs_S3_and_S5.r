@@ -37,16 +37,16 @@ stat_summary(geom='ribbon', fun.data = mean_cl_normal, fun.args=list(conf.int=0.
 stat_summary(geom='line', fun.y = mean, size=1)+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.position="right",
 strip.background=element_rect(fill=NA,color=NA))+
-scale_color_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+ylab("Changes in trait parameters")+guides(linetype=guide_legend(override.aes=list(fill=NA,color="black")))+
-facet_grid(cols=vars(rich),labeller = label_bquote(cols=n[sp] == .(rich)))+labs(colour="Simulations with:",linetype="trait")+ggtitle("a",subtitle="Mean of the trait(s)")
+scale_color_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+scale_fill_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+ylab("Changes in trait parameters")+guides(linetype=guide_legend(override.aes=list(fill=NA,color="black")))+
+facet_grid(cols=vars(rich),labeller = label_bquote(cols=n[sp] == .(rich)))+labs(colour="Simulations with:",fill="Simulations with:",linetype="trait")+ggtitle("a",subtitle="Mean of the trait(s)")
 
 s3_b=ggplot(subset(datf2,time>0 & type3=="sd"),aes(x=time,y=delta,color=trait,fill=trait,linetype=type2))+
 stat_summary(geom='ribbon', fun.data = mean_cl_normal, fun.args=list(conf.int=0.95),alpha=0.4) +
 stat_summary(geom='line', fun.y = mean, size=1)+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),legend.position="right",
 strip.background=element_rect(fill=NA,color=NA))+
-scale_color_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+ylab("Changes in trait parameters")+guides(linetype=guide_legend(override.aes=list(fill=NA,color="black")))+
-facet_grid(cols=vars(rich),labeller = label_bquote(cols=n[sp] == .(rich)))+labs(colour="Simulations with:",linetype="trait")+ggtitle("a",subtitle="Standard deviation of the trait(s)")
+scale_color_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+ylab("Changes in trait parameters")+guides(linetype=guide_legend(override.aes=list(fill=NA,color="black")))+scale_fill_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+
+facet_grid(cols=vars(rich),labeller = label_bquote(cols=n[sp] == .(rich)))+labs(colour="Simulations with:",fill="Simulations with:",linetype="trait")+ggtitle("a",subtitle="Standard deviation of the trait(s)")
 
 png("Figures/Fig_S3.png",width=1300,height=1100,res=150)
 plot_grid(s3_a,s3_b,ncol=1,align="hv")
@@ -57,24 +57,26 @@ dev.off();
 endpo=subset(datf,time==time_end)
 endpo$labi=paste0(endpo$type2,"\n c = ",endpo$comp)
 sp1=ggplot()+
-geom_density(data=subset(endpo,type3=="mu"),aes(x=invlogit1(value),color=trait,fill=trait),alpha=0.2)+
+geom_histogram(data=subset(endpo,type3=="mu"),aes(x=invlogit1(value),color=trait,fill=trait),alpha=0.7)+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.border=element_blank(),
 panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
 strip.background=element_rect(fill=NA,color=NA),
 legend.key = element_rect(fill = "white"))+
-scale_color_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+scale_fill_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+ylab("density")+
+scale_color_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+scale_fill_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+ylab("Total number of species across the 100 simulations")+
 xlab("Mean value of the trait")+ggtitle("a")+labs(linetype=expression(paste(n[sp]," / guild")))+
 guides(linetype=guide_legend(override.aes = list(fill = "white",colour="black")))+facet_grid(cols=vars(rich),rows=vars(labi), labeller = label_bquote(cols=n[sp] == .(rich)), scales = "free_y")+
 labs(colour="Simulations with:",fill="Simulations with:")+
 scale_y_continuous(n.breaks=3)
 
+
+
 sp2=ggplot()+
-geom_density(data=subset(endpo,type3=="sd"),aes(x=invlogit(value),color=trait,fill=trait),alpha=0.2)+
+geom_histogram(data=subset(endpo,type3=="sd"),aes(x=invlogit(value),color=trait,fill=trait),alpha=0.7)+
 theme_bw()+theme(axis.line = element_line(colour = "black"),panel.grid.major = element_blank(),panel.border=element_blank(),
 panel.grid.minor = element_blank(),panel.background = element_blank(),plot.title=element_text(size=14,face="bold",hjust = 0),
 strip.background=element_rect(fill=NA,color=NA),
 legend.key = element_rect(fill = "white"))+
-scale_color_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+scale_fill_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+ylab("density")+
+scale_color_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+scale_fill_manual(values=colo,labels=c("both traits","only morpho","only pheno"))+ylab("Total number of species across the 100 simulations")+
 xlab("Standard deviation of the trait")+ggtitle("b")+labs(linetype=expression(paste(n[sp]," / guild")))+
 guides(linetype=guide_legend(override.aes = list(fill = "white",colour="black")))+facet_grid(cols=vars(rich),rows=vars(labi), labeller = label_bquote(cols=n[sp] == .(rich)), scales = "free_y")+
 labs(colour="Simulations with:",fill="Simulations with:")+
@@ -85,8 +87,3 @@ plot_grid(sp1,sp2,ncol=1,align="hv")
 png("Figures/Fig_S5.png",width=1200,height=1600,res=150)
 plot_grid(sp1,sp2,ncol=1,align="hv")
 dev.off();
-
-
-
-biche=dcast(endpo,trait+time+comp+essai+species+type2+rich~type3,value.var="value")
-ggplot(data=biche,aes(x=invlogit1(mu),y=invlogit(sd),color=type2))+geom_point()+facet_wrap(~trait+comp+rich)

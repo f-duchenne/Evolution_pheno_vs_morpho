@@ -19,10 +19,12 @@ liste = fread("data/empirical/initial_conditions_simulations/liste.csv")
 
 competition=4
 
-datf=NULL
+datf_li=list()
+a=0
 for(ess in 1:10){
 	for(tr in c("both")){
 		for(jj in 1:nrow(liste)){
+			a=a+1
 
 			dat=fread(paste0("data/empirical/outputs_simulations/results_for_each_individual_simulations/ueq_",liste$site[jj],"_comp_",competition,"_",tr,"_",ess,".csv"))
 			nbsp_a=liste$na[jj]
@@ -53,10 +55,15 @@ for(ess in 1:10){
 			dat2$comp=competition
 			dat2$essai=ess
 			dat2$site=liste$site[jj]
-			datf=rbind(datf,dat2)
+
+			datf_li[[a]]=dat2
 		}
 	}
 }
+
+datf=do.call(rbind,datf_li)
+
+
 fwrite(datf,"data/empirical/outputs_simulations/species_level_simues_empir.csv")
 datf_alleg=datf[datf$time %in% c(0,1000,2000,3000,4000,5000),]
 fwrite(datf_alleg,"data/empirical/outputs_simulations/species_level_simues_empir_alleg.csv")

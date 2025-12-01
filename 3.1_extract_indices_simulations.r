@@ -18,10 +18,12 @@ comp_vec=c(2,4,6)
 time_vec=plyr::round_any(seq(sqrt(0),sqrt(5000),length.out=10)^2,10)
 
 ##### AGGREGATE SIMULATIONS WITH TWO TRAITS
-datf=NULL
+datf_li=list()
+a=0
 for(competition in comp_vec){
 	for (rich in c(10,20,30)){
 		for(i in 1:100){
+			a=a+1
 			dat=fread(paste0("data/simulated/outputs_simulations/results_for_each_individual_simulations/ueq_both_",i,"_",rich,"_",competition,".csv"))
 			dive=rich*2
 			names(dat)[1:(dive)]=paste0("mu_",1:dive)
@@ -40,14 +42,20 @@ for(competition in comp_vec){
 			dat2$comp=competition
 			dat2$essai=i
 			dat2$rich=rich
-			datf=rbind(datf,dat2)
+			datf_li[[a]]=dat2
 		}
 	}
 }
+
+datf1=do.call(rbind,datf_li)
+
+datf_li=list()
+a=0
 ##### AGGREGATE SIMULATIONS WITH ONE TRAITS
 for(competition in comp_vec){
 	for (rich in c(10,20,30)){
 		for(i in 1:100){
+			a=a+1
 			dat=fread(paste0("data/simulated/outputs_simulations/results_for_each_individual_simulations/ueq_",i,"_",rich,"_",competition,".csv"))
 			dive=rich*2
 			names(dat)[1:(dive)]=paste0("mu_",1:dive)
@@ -63,10 +71,14 @@ for(competition in comp_vec){
 			dat2$comp=competition
 			dat2$essai=i
 			dat2$rich=rich
-			datf=rbind(datf,dat2)
+			datf_li[[a]]=dat2
 		}
 	}
 }
+
+datf2=do.call(rbind,datf_li)
+
+datf=rbind(datf1,datf2)
 
 fwrite(datf,"data/simulated/outputs_simulations/species_level.csv")
 datf_alleg=datf[datf$time %in% time_vec,]
@@ -243,7 +255,7 @@ for(competition in comp_vec){
 				for(it in 1:ncalc){vec_stab=c(vec_stab,Omega(A))}
 				ind$feas_structure=mean(vec_stab)
 				ind$feas_structure_se=sd(vec_stab)/sqrt(ncalc)
-        indf=rbind(indf,ind)
+				indf=rbind(indf,ind)
         
 			}
 		}
@@ -269,6 +281,7 @@ setwd(dir=path_folder)
 indf=NULL
 for(ess in 1:100){
 	ind=fread(paste0("data/simulated/outputs_simulations/results_community_level_each_replicate/networks_info_",ess,".csv"))
+	print(paste(ess,nrow(ind)))
 	indf=rbind(indf,ind)
 }
 fwrite(indf,"data/simulated/outputs_simulations/networks_info.csv")
